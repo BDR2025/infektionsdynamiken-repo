@@ -15,15 +15,11 @@
     <link rel="stylesheet" href="css/pages.css" />
     <link rel="stylesheet" href="css/landing.css" />
     <style>
-/* Responsive Header rules from user */
 @media (max-width: 1000px){ .landing-header .nav-links{ display:none; } }
-.wordmark-short{ display:none; }
-@media (max-width:680px){ .wordmark-long{ display:none; } .wordmark-short{ display:block; } }
 .wordmark-short{ display:none; }
 @media (max-width:680px){ .wordmark-long{ display:none; } .wordmark-short{ display:block; } }
 @media (max-width:499.98px){ .wordmark-long,.wordmark-short{ display:none; } }
 
-/* Repo layout: two columns with right-side preview */
 .repo-grid{ display:grid; grid-template-columns: 1fr; gap:16px; }
 @media (min-width:1024px){ .repo-grid{ grid-template-columns: minmax(320px, 0.9fr) 1.6fr; } }
 .preview-card{ background:#fff; border:1px solid #e6e8eb; border-radius:12px; padding:16px; min-height:320px; }
@@ -40,7 +36,6 @@
 .tree details{ margin-left:.75rem; }
 .tree .file{ margin-left:1.5rem; padding:2px 0; }
 
-/* Print only the preview */
 @media print{
   header, .tree-controls, .tree, .landing-footer, .eyebrow, .accent-line, .grid-2-2, .grid-2, .container.bar { display:none !important; }
   .preview-card{ border:none; }
@@ -52,7 +47,7 @@
     <header class="landing-header" role="banner">
       <div class="container bar">
         <a href="#top" class="brand" aria-label="Infektionsdynamiken.de — Startseite">
-          <img class="brand-icon" src="../assets/icons/logo-id.svg" alt="Infektionsdynamiken.de" />
+          <img class="brand-icon" src="assets/icons/logo-id.svg" alt="Infektionsdynamiken.de" />
           <div class="wordmark wordmark-long">
             <div class="brand-title">Infektionsdynamiken verstehen</div>
             <div class="brand-claim">Repository · transparent &amp; zugänglich</div>
@@ -67,7 +62,6 @@
             <a href="#technik" class="active" aria-current="page">Technik</a>
             <a href="#publikationen">Publikationen</a>
             <a href="#lehre">Lehre</a>
-            <a href="https://infektionsdynamiken.de/#legal">Rechtliches</a>
           </div>
         </nav>
       </div>
@@ -79,20 +73,6 @@
           <hr class="accent-line" />
           <h1>Repository Übersicht</h1>
           <p class="lead">Drei Bereiche: <strong>Technik/Engines</strong>, <strong>Publikationen</strong>, <strong>Lehr- &amp; Lernunterlagen</strong>. Versionen sind kuratiert; <code>latest/</code> ist zunächst ein sichtbarer Stub.</p>
-          <div class="grid-2-2 mt-4">
-            <article class="card">
-              <h3>Technik &amp; Engines</h3>
-              <p>Intro pro Minilab (UID‑I‑ML1, UID‑I‑ML2, …) sowie globale Engines für Explore (UID‑E‑E), Challenge (UID‑E‑C), Visuals (UID‑E‑V) und Parameters (UID‑E‑P). Globale Engines unterstützen <em>modules/</em> für feingranulare Bausteine.</p>
-            </article>
-            <article class="card">
-              <h3>Publikationen</h3>
-              <p>Papers, Konferenzbeiträge, ggf. Preprints &amp; Talks.</p>
-            </article>
-            <article class="card">
-              <h3>Lehr- &amp; Lernunterlagen</h3>
-              <p>Materialien für Lehrende &amp; Lernende; optional Bibliografie-Hub.</p>
-            </article>
-          </div>
         </article>
       </section>
 
@@ -103,117 +83,13 @@
           <div class="repo-grid">
             <div>
               <h2>Verzeichnisbaum</h2>
-              <p class="muted">„latest/“ ist aktuell ein sichtbarer Stub. Versionen werden manuell gepflegt.</p>
+              <p class="muted">Manifest-basiert (GitHub Pages kompatibel). Wird automatisch per GitHub Action erzeugt.</p>
               <div class="tree-controls">
                 <button id="expandAll" class="btn" type="button">Alles aufklappen</button>
                 <button id="collapseAll" class="btn" type="button">Alles zuklappen</button>
               </div>
-              <div class="tree" id="tree">
-                <details open>
-                  <summary>engines/</summary>
-
-                  <details>
-                    <summary>uid-i-ml1/</summary>
-                    <details>
-                      <summary>v0.1.0/</summary>
-                      <div class="file"><a href="engines/uid-i-ml1/v0.1.0/README.txt">README.txt</a></div>
-                    </details>
-                    <details>
-                      <summary>latest/</summary>
-                      <div class="file"><a href="engines/uid-i-ml1/latest/README.txt">README.txt</a></div>
-                    </details>
-                  </details>
-
-                  <details>
-                    <summary>uid-i-ml2/</summary>
-                    <details>
-                      <summary>v0.1.0/</summary>
-                      <div class="file"><a href="engines/uid-i-ml2/v0.1.0/README.txt">README.txt</a></div>
-                    </details>
-                    <details>
-                      <summary>latest/</summary>
-                      <div class="file"><a href="engines/uid-i-ml2/latest/README.txt">README.txt</a></div>
-                    </details>
-                  </details>
-
-                  <details>
-                    <summary>uid-e-e/</summary>
-                    <details>
-                      <summary>v0.1.0/</summary>
-                      <div class="file"><a href="engines/uid-e-e/v0.1.0/README.txt">README.txt</a></div>
-                    </details>
-                    <details>
-                      <summary>latest/</summary>
-                      <div class="file"><a href="engines/uid-e-e/latest/README.txt">README.txt</a></div>
-                    </details>
-                    <details>
-                      <summary>modules/</summary>
-                      <div class="file"><a href="engines/uid-e-e/modules/README.txt">README.txt</a></div>
-                    </details>
-                  </details>
-
-                  <details>
-                    <summary>uid-e-c/</summary>
-                    <details>
-                      <summary>v0.1.0/</summary>
-                      <div class="file"><a href="engines/uid-e-c/v0.1.0/README.txt">README.txt</a></div>
-                    </details>
-                    <details>
-                      <summary>latest/</summary>
-                      <div class="file"><a href="engines/uid-e-c/latest/README.txt">README.txt</a></div>
-                    </details>
-                    <details>
-                      <summary>modules/</summary>
-                      <div class="file"><a href="engines/uid-e-c/modules/README.txt">README.txt</a></div>
-                    </details>
-                  </details>
-
-                  <details>
-                    <summary>uid-e-v/</summary>
-                    <details>
-                      <summary>v0.1.0/</summary>
-                      <div class="file"><a href="engines/uid-e-v/v0.1.0/README.txt">README.txt</a></div>
-                    </details>
-                    <details>
-                      <summary>latest/</summary>
-                      <div class="file"><a href="engines/uid-e-v/latest/README.txt">README.txt</a></div>
-                    </details>
-                    <details>
-                      <summary>modules/</summary>
-                      <div class="file"><a href="engines/uid-e-v/modules/README.txt">README.txt</a></div>
-                    </details>
-                  </details>
-
-                  <details>
-                    <summary>uid-e-p/</summary>
-                    <details>
-                      <summary>v0.1.0/</summary>
-                      <div class="file"><a href="engines/uid-e-p/v0.1.0/README.txt">README.txt</a></div>
-                    </details>
-                    <details>
-                      <summary>latest/</summary>
-                      <div class="file"><a href="engines/uid-e-p/latest/README.txt">README.txt</a></div>
-                    </details>
-                    <details>
-                      <summary>modules/</summary>
-                      <div class="file"><a href="engines/uid-e-p/modules/README.txt">README.txt</a></div>
-                    </details>
-                  </details>
-
-                </details>
-
-                <details>
-                  <summary>publications/</summary>
-                  <div class="file"><a href="publications/README.txt">README.txt</a></div>
-                </details>
-
-                <details>
-                  <summary>learning/</summary>
-                  <div class="file"><a href="learning/README.txt">README.txt</a></div>
-                </details>
-              </div>
+              <div class="tree" id="tree">Manifest wird geladen …</div>
             </div>
-
             <div>
               <div class="preview-card" id="preview">
                 <div class="preview-head">
