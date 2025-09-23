@@ -19,34 +19,15 @@
 .wordmark-short{ display:none; }
 @media (max-width:680px){ .wordmark-long{ display:none; } .wordmark-short{ display:block; } }
 @media (max-width:499.98px){ .wordmark-long,.wordmark-short{ display:none; } }
-
-.repo-grid{ display:grid; grid-template-columns: 1fr; gap:16px; }
-@media (min-width:1024px){ .repo-grid{ grid-template-columns: minmax(320px, 0.9fr) 1.6fr; } }
-.preview-card{ background:#fff; border:1px solid #e6e8eb; border-radius:12px; padding:16px; min-height:320px; }
-.preview-head{ display:flex; align-items:center; justify-content:space-between; gap:.75rem; border-bottom:1px solid #eef0f2; padding-bottom:.5rem; margin-bottom:.75rem; }
-.preview-title{ font-weight:600; font-size:1rem; }
-.preview-actions{ display:flex; gap:.5rem; }
-.preview-actions .btn{ border:1px solid #e6e8eb; border-radius:8px; background:#fff; padding:.35rem .6rem; cursor:pointer; }
-.preview-body{ max-height:60vh; overflow:auto; }
-.preview-body pre{ white-space:pre-wrap; word-wrap:break-word; }
-.file-active{ font-weight:600; text-decoration:underline; }
-.tree-controls{ display:flex; gap:.5rem; margin:.5rem 0 1rem; }
-.tree-controls .btn{ border:1px solid #e6e8eb; border-radius:8px; padding:.35rem .6rem; background:#fff; cursor:pointer; }
-.tree{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; border:1px dashed #e6e8eb; border-radius:12px; padding:12px; background:#fff; }
-.tree details{ margin-left:.75rem; }
-.tree .file{ margin-left:1.5rem; padding:2px 0; }
-
-@media print{
-  header, .tree-controls, .tree, .landing-footer, .eyebrow, .accent-line, .grid-2-2, .grid-2, .container.bar { display:none !important; }
-  .preview-card{ border:none; }
-  .preview-body{ max-height:none; overflow:visible; }
-}
+.grid-2-2{ display:grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap:16px; }
+@media (max-width:720px){ .grid-2-2{ grid-template-columns: 1fr; } }
     </style>
   </head>
   <body id="top" class="repo">
+    <!-- Header (Landing-Style, eingekürzt) -->
     <header class="landing-header" role="banner">
       <div class="container bar">
-        <a href="#top" class="brand" aria-label="Infektionsdynamiken.de — Startseite">
+        <a href="index.html" class="brand" aria-label="Infektionsdynamiken.de — Startseite">
           <img class="brand-icon" src="assets/icons/logo-id.svg" alt="Infektionsdynamiken.de" />
           <div class="wordmark wordmark-long">
             <div class="brand-title">Infektionsdynamiken verstehen</div>
@@ -59,74 +40,47 @@
         </a>
         <nav class="landing-nav" aria-label="Hauptnavigation Repository">
           <div class="nav-links">
-            <a href="#technik" class="active" aria-current="page">Technik</a>
-            <a href="#publikationen">Publikationen</a>
-            <a href="#lehre">Lehre</a>
+            <a href="technik.html">Technik</a>
+            <a href="publikationen.html">Publikationen</a>
+            <a href="lehre.html">Lehre</a>
+            <a href="https://infektionsdynamiken.de/#legal">Rechtliches</a>
           </div>
         </nav>
       </div>
     </header>
+
     <main>
-      <section class="section container" id="intro">
+      <section class="section container">
         <article class="card pad">
           <span class="eyebrow">Start</span>
           <hr class="accent-line" />
-          <h1>Repository Übersicht</h1>
-          <p class="lead">Drei Bereiche: <strong>Technik/Engines</strong>, <strong>Publikationen</strong>, <strong>Lehr- &amp; Lernunterlagen</strong>. Versionen sind kuratiert; <code>latest/</code> ist zunächst ein sichtbarer Stub.</p>
-        </article>
-      </section>
-
-      <section class="section container" id="technik">
-        <article class="card pad">
-          <span class="eyebrow">Technik</span>
-          <hr class="accent-line" />
-          <div class="repo-grid">
-            <div>
-              <h2>Verzeichnisbaum</h2>
-              <p class="muted">Manifest-basiert (GitHub Pages kompatibel). Wird automatisch per GitHub Action erzeugt.</p>
-              <div class="tree-controls">
-                <button id="expandAll" class="btn" type="button">Alles aufklappen</button>
-                <button id="collapseAll" class="btn" type="button">Alles zuklappen</button>
-              </div>
-              <div class="tree" id="tree">Manifest wird geladen …</div>
-            </div>
-            <div>
-              <div class="preview-card" id="preview">
-                <div class="preview-head">
-                  <div class="preview-title" id="previewTitle">Keine Datei ausgewählt</div>
-                  <div class="preview-actions">
-                    <a id="downloadBtn" class="btn" href="#" download>Download</a>
-                    <button id="printBtn" class="btn" type="button">Drucken</button>
-                  </div>
-                </div>
-                <div class="preview-body" id="previewBody" aria-live="polite">Wähle links eine Datei aus.</div>
-              </div>
-            </div>
+          <h1>Repository · Dispatcher</h1>
+          <p class="lead">Wähle einen Bereich:</p>
+          <div class="grid-2-2 mt-4">
+            <article class="card">
+              <h3>Technik &amp; Engines</h3>
+              <p>Intro (UID-I-ML*), globale Engines (UID-E-E/-C/-V/-P), Module &amp; latest.</p>
+              <p><a class="btn" href="technik.html">Öffnen</a></p>
+            </article>
+            <article class="card">
+              <h3>Publikationen</h3>
+              <p>Papers, Vorträge, Preprints.</p>
+              <p><a class="btn" href="publikationen.html">Öffnen</a></p>
+            </article>
+            <article class="card">
+              <h3>Lehre</h3>
+              <p>Unterlagen, Aufgaben, Bibliografie.</p>
+              <p><a class="btn" href="lehre.html">Öffnen</a></p>
+            </article>
           </div>
         </article>
       </section>
-
-      <section class="section container" id="publikationen">
-        <article class="card pad">
-          <span class="eyebrow">Publikationen</span>
-          <hr class="accent-line" />
-          <p>Platzhalter-Bereich. Dateien liegen unter <code>publications/</code>.</p>
-        </article>
-      </section>
-
-      <section class="section container" id="lehre">
-        <article class="card pad">
-          <span class="eyebrow">Lehre</span>
-          <hr class="accent-line" />
-          <p>Platzhalter-Bereich. Dateien liegen unter <code>learning/</code>.</p>
-        </article>
-      </section>
     </main>
+
     <footer class="landing-footer">
       <div class="container">
         <p class="muted">© CC BY 4.0 · Infektionsdynamiken – Repository (Preview). Keine Cookies.</p>
       </div>
     </footer>
-    <script src="js/main.js"></script>
   </body>
 </html>
