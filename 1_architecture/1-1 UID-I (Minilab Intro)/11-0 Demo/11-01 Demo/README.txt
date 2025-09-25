@@ -1,4 +1,4 @@
-Minilab 2 · Intro (SEIR)
+Minilab 1 · Intro (SIR)
 
 Diese Seite zeigt eine vereinfachte Demo des Minilab Intros. Sie ist bewusst aus dem gewohnten Stil herausgelöst und auf das Wesentliche reduziert. Sichtbar werden allein die Funktionalität der Simulation, die Darstellung der Kurven und die Anzeige der wichtigsten Kennzahlen.
 

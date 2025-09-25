@@ -1,16 +1,24 @@
-/* ========================================================================
-   Infektionsdynamiken · Intro Runner (SIS)
-   Datei / File:        js/minilabs/intro/intro-sis.js
-   Version:             v1.0
-   Datum / Date:        2025-09-12
-   Autor / Author:      B. D. Rausch · ChatGPT
-   Lizenz / License:    CC BY 4.0
-   ------------------------------------------------------------------------
-   Didaktik
-   - Kein R; bei R0>1 konvergiert I(t) → I* = 1 − 1/R0 (endemisches Gleichgewicht).
-   - Intro-KPIs: I* (in %), t95 (Zeit bis 95%%-Annäherung), t (Tag).
-   - Sequenz (5 Schritte): I → S (+I-Spur) → [zeige I*] → S+I → [wipe] S+I (frisch).
-=========================================================================== */
+/*!
+ * File:      intro-sis.js
+ * Project:   Understanding Infection Dynamics · Infektionsdynamiken verstehen
+ * Type:      Open Educational Resource (OER)
+ * Authors:   B. D. Rausch · A. Heinz
+ * Contact:   info@infectiondynamics.eu · info@infektionsdynamiken.de
+ * License:   CC BY 4.0
+ *
+ * Created:   2025-09-12
+ * Updated:   2025-09-25
+ * Version:   3.0.0
+ * Changelog: - v3.0.0 OER-Kopfzeile vereinheitlicht; Runner-Annotationen an SIR/SEIR angepasst
+ */
+/* =======================================================================
+   UID-Intro · Runner (SIS)
+   - Deterministische SIS-Simulation auf N=1 (Fraktionsskala)
+   - Visualisierung als Custom-Canvas (ohne Chart.js)
+   - Dramaturgische Sequenz pro Coach (sichtbare Kurven, Wipes, Dauer)
+   - KPI-Updates als CustomEvent 'idv:intro:kpi' für Boot → KPI-Decks
+   ======================================================================= */
+
 export function mountIntroSIS(userOpts = {}){
   const root  = document.documentElement;
   const lang  = (root.lang || 'de').toLowerCase();
@@ -21,58 +29,64 @@ export function mountIntroSIS(userOpts = {}){
                  : (userOpts.canvas || document.getElementById('intro-canvas'));
   if(!canvas){ console.error('[intro-sis] canvas not found'); return {play(){}, stop(){}, isRunning(){return false}}; }
 
-const PARAMS = {
-  R0:  1.25,  // I* ≈ 20 %  (1 / (1–0.20) = 1.25)
-  D:   60,    // längere „infektiöse“/Kolonisations-Phase (2 Monate)
-  I0:  1e-4,  // etwas höherer Startanteil → schneller sichtbare Kurve
-  N:   1,
-  T:   5000,   // 1 Jahr
-  dt:  0.25
-};
-
-
-  // Sequences: I → S → (show I*) → S+I → [wipe] S+I
-  const SEQUENCES = {
-    ben:   [ {visible:['I'],       duration:10, carryPrev:false, resetBefore:false, showIstar:false},
-             {visible:['S'],       duration: 6, carryPrev:true,  resetBefore:false, showIstar:false},
-             {visible:['I'],       duration: 4, carryPrev:true,  resetBefore:false, showIstar:true },  // reveal I*
-             {visible:['S','I'],   duration: 6, carryPrev:true,  resetBefore:false, showIstar:true },
-             {visible:['S','I'],   duration: 6, carryPrev:false, resetBefore:true,  showIstar:true } ],
-
-    mila:  [ {visible:['I'],       duration:12, carryPrev:false, resetBefore:false, showIstar:false},
-             {visible:['S'],       duration: 8, carryPrev:true,  resetBefore:false, showIstar:false},
-             {visible:['I'],       duration: 6, carryPrev:true,  resetBefore:false, showIstar:true },
-             {visible:['S','I'],   duration: 8, carryPrev:true,  resetBefore:false, showIstar:true },
-             {visible:['S','I'],   duration: 8, carryPrev:false, resetBefore:true,  showIstar:true } ],
-
-    chloe: [ {visible:['I'],       duration:10, carryPrev:false, resetBefore:false, showIstar:false},
-             {visible:['S'],       duration: 6, carryPrev:true,  resetBefore:false, showIstar:false},
-             {visible:['I'],       duration: 4, carryPrev:true,  resetBefore:false, showIstar:true },
-             {visible:['S','I'],   duration: 6, carryPrev:true,  resetBefore:false, showIstar:true },
-             {visible:['S','I'],   duration: 6, carryPrev:false, resetBefore:true,  showIstar:true } ],
-
-    archer:[ {visible:['I'],       duration:12, carryPrev:false, resetBefore:false, showIstar:false},
-             {visible:['S'],       duration: 8, carryPrev:true,  resetBefore:false, showIstar:false},
-             {visible:['I'],       duration: 6, carryPrev:true,  resetBefore:false, showIstar:true },
-             {visible:['S','I'],   duration: 8, carryPrev:true,  resetBefore:false, showIstar:true },
-             {visible:['S','I'],   duration: 8, carryPrev:false, resetBefore:true,  showIstar:true } ]
+  // Modell-Parameter (Fraktionsskala N=1; Intro zeigt Prozentwerte)
+  const PARAMS = {
+    R0:  1.25,  // I* ≈ 20 %  (1 / (1–0.20) = 1.25)
+    D:   60,    // längere „infektiöse“/Kolonisations-Phase (≈ 2 Monate)
+    I0:  1e-4,  // etwas höherer Startanteil → schneller sichtbare Kurve
+    N:   1,
+    T:   5000,  // Laufzeit in Tagen (Hinweis: 5000 d ≈ 13,7 Jahre; Kommentar „1 Jahr“ war missverständlich)
+    dt:  0.25
   };
 
+  // Dramaturgische Sequenzen: I → S → [reveal I*] → S+I → [wipe] S+I
+  const SEQUENCES = {
+    ben:   [ {visible:['I'],       duration: 4, carryPrev:false, resetBefore:false, showIstar:false},
+             {visible:['S'],       duration: 4, carryPrev:true,  resetBefore:false, showIstar:false},
+             {visible:['I'],       duration: 4, carryPrev:true,  resetBefore:false, showIstar:true },
+             {visible:['S','I'],   duration: 4, carryPrev:true,  resetBefore:false, showIstar:true },
+             {visible:['S','I'],   duration: 4, carryPrev:false, resetBefore:true,  showIstar:true } ],
+
+    mila:  [ {visible:['I'],       duration: 4, carryPrev:false, resetBefore:false, showIstar:false},
+             {visible:['S'],       duration: 4, carryPrev:true,  resetBefore:false, showIstar:false},
+             {visible:['I'],       duration: 4, carryPrev:true,  resetBefore:false, showIstar:true },
+             {visible:['S','I'],   duration: 4, carryPrev:true,  resetBefore:false, showIstar:true },
+             {visible:['S','I'],   duration: 4, carryPrev:false, resetBefore:true,  showIstar:true } ],
+
+    chloe: [ {visible:['I'],       duration: 4, carryPrev:false, resetBefore:false, showIstar:false},
+             {visible:['S'],       duration: 4, carryPrev:true,  resetBefore:false, showIstar:false},
+             {visible:['I'],       duration: 4, carryPrev:true,  resetBefore:false, showIstar:true },
+             {visible:['S','I'],   duration: 4, carryPrev:true,  resetBefore:false, showIstar:true },
+             {visible:['S','I'],   duration: 4, carryPrev:false, resetBefore:true,  showIstar:true } ],
+
+    archer:[ {visible:['I'],       duration: 4, carryPrev:false, resetBefore:false, showIstar:false},
+             {visible:['S'],       duration: 4, carryPrev:true,  resetBefore:false, showIstar:false},
+             {visible:['I'],       duration: 4, carryPrev:true,  resetBefore:false, showIstar:true },
+             {visible:['S','I'],   duration: 4, carryPrev:true,  resetBefore:false, showIstar:true },
+             {visible:['S','I'],   duration: 4, carryPrev:false, resetBefore:true,  showIstar:true } ]
+  };
+
+  // Datenreihen integrieren, Renderer und Player aufsetzen
   const series   = integrateSISfrac(PARAMS);
   const renderer = createRenderer(canvas, series, lang);
   const player   = createSequencePlayer(series, renderer, PARAMS);
 
+  // KPI-Bridge nach außen (Boot: onUpdate)
   if (typeof userOpts.onUpdate==='function'){
     window.addEventListener('idv:intro:kpi', e => userOpts.onUpdate(e.detail||{}));
   }
 
-  return { play(){ player.play(SEQUENCES[coach] || SEQUENCES.ben); },
-           stop(){ player.stop(); },
-           isRunning(){ return player.isRunning(); } };
+  // Öffentliche Runner-API
+  return {
+    play(){ player.play(SEQUENCES[coach] || SEQUENCES.ben); },
+    stop(){ player.stop(); },
+    isRunning(){ return player.isRunning(); }
+  };
 }
 export default mountIntroSIS;
 
-/* ============================ Integration (SIS) ======================== */
+/* ============================ Integration (SIS; N=1) ==================== */
+/* Euler-Vorwärtsschritt auf Fraktionsskala; liefert S, I und t */
 function integrateSISfrac({R0,D,I0,N,T,dt}){
   const steps = Math.floor(T/dt)+1;
   const S=new Float64Array(steps), I=new Float64Array(steps), t=new Float64Array(steps);
@@ -91,7 +105,8 @@ function integrateSISfrac({R0,D,I0,N,T,dt}){
   return { S,I,t,R0,gamma,beta,dt,T,N:1 };
 }
 
-/* ============================== Renderer =============================== */
+/* ============================== Renderer ================================= */
+/* Zeichnet Gitter, Kurven und Marker (I*, t95); statische vs. animierte Anteile */
 function createRenderer(canvas, series, lang){
   const dpr=Math.max(1,Math.min(3,window.devicePixelRatio||1));
   const css=getComputedStyle(document.documentElement);
@@ -122,7 +137,7 @@ function createRenderer(canvas, series, lang){
 
   function draw(idx, view){
     ctx.clearRect(0,0,canvas.clientWidth,canvas.clientHeight); grid();
-    // markers
+    // Marker
     if (view.markers?.istar) drawHLine(view.markers.istar.y, lang==='de'?'I*':'I*');
     if (view.markers?.t95)   drawVLine(view.markers.t95.x, 't95');
 
@@ -139,11 +154,13 @@ function createRenderer(canvas, series, lang){
 }
 
 /* =========================== Sequence Player =========================== */
+/* Steuert Schrittfolgen, Timing und KPI-Dispatch (fps-gebunden in dieser Version) */
 function createSequencePlayer(series, renderer, PARAMS){
   let raf=0,running=false,idx=0,stepIdx=-1;
   const totalIdx=series.t.length-1;
   let carried=new Set(), visible=new Set();
-  // Precompute I* and t95
+
+  // I* und t95 vorberechnen
   const Istar = Math.max(0, 1 - 1/Math.max(1e-9, PARAMS.R0));    // fraction
   let t95Index = null;
   if (Istar > 0){
@@ -152,7 +169,7 @@ function createSequencePlayer(series, renderer, PARAMS){
   }
   let istarShown=false, t95Shown=false;
 
-  // Sequences are defined in mount
+  // Sequenzen werden im mount gesetzt
   let SEQUENCES=null;
   function setSequences(seq){ SEQUENCES=seq; }
 
@@ -163,8 +180,10 @@ function createSequencePlayer(series, renderer, PARAMS){
 
     if (s.resetBefore){ carried.clear(); }
     idx = 0;
+
     const speed = (totalIdx-0) / Math.max(0.1, +s.duration || 6);
     visible = new Set(s.visible || ['S','I']);
+
     if (s.carryPrev){
       const prev = SEQUENCES[Math.max(0, stepIdx-1)]?.visible || [];
       prev.forEach(c => carried.add(c));
@@ -177,21 +196,33 @@ function createSequencePlayer(series, renderer, PARAMS){
     const i=Math.max(0,Math.min(series.t.length-1, idx|0));
     const S=series.S[i], I=series.I[i];
     const vis=new Set([...visible,...carried]);
-    const detail={ t: Math.floor(series.t[i]+1e-6), r0: PARAMS.R0, reff: vis.has('S') ? (PARAMS.R0*S) : PARAMS.R0 };
+
+    const detail={ t: Math.floor(series.t[i]+1e-6),
+                   r0: PARAMS.R0,
+                   reff: vis.has('S') ? (PARAMS.R0*S) : PARAMS.R0 };
+
     if (vis.has('S')) detail.sRel = 100*S;
     if (vis.has('I')) detail.iRel = 100*I;
     if (istarShown) detail.Istar = { value: 100*Istar };
     if (!t95Shown && t95Index!=null && (i>=t95Index)){ t95Shown=true; detail.t95 = Math.floor(series.t[t95Index]+1e-6); }
+
     try{ window.dispatchEvent(new CustomEvent('idv:intro:kpi',{ detail })); }catch(e){}
   }
 
   function tick(ctx){
     if(!running) return;
     const { s, speed } = ctx;
-    const markers = { istar: istarShown ? { y: Istar } : null, t95: (t95Shown && t95Index!=null) ? { x: t95Index } : null };
+
+    const markers = {
+      istar: istarShown ? { y: Istar } : null,
+      t95:   (t95Shown && t95Index!=null) ? { x: t95Index } : null
+    };
+
     renderer.draw(idx, { static:Array.from(carried), animate:Array.from(visible), markers });
     broadcast();
-    idx += speed/60;
+
+    idx += speed/60; // FPS-abhängig in dieser Version (Delta-Upgrade optional)
+
     if (idx >= totalIdx){
       const n = next();
       if (n) raf = requestAnimationFrame(()=>tick(n));
