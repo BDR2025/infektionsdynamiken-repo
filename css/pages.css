@@ -44,3 +44,18 @@
   color: var(--brand);
 }
 
+/* rechte Grid-Spalte darf schrumpfen */
+.repo-grid > div:last-child { min-width: 0; }
+
+/* lange Pfade im Preview-Titel umbrechen */
+#previewTitle { overflow-wrap: anywhere; word-break: break-word; }
+
+/* aktive Datei */
+.tree a.file-active{ font-weight:600; color:var(--brand); text-decoration:none; }
+
+/* aktiver Ordner (Auto-README) */
+.tree summary.folder-active{ font-weight:700; color:var(--brand); }
+/* optional: Marker einfärben */
+.tree details > summary.folder-active::marker { color: var(--brand); }
+
+
