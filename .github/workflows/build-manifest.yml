@@ -5,26 +5,71 @@ on:
     branches: [ main, master ]
   workflow_dispatch:
 
+permissions:
+  contents: write  # erlaubt Push mit GITHUB_TOKEN
+
+concurrency:
+  group: manifest-update-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0          # komplette Historie, nötig für Rebase
+          persist-credentials: true
 
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.x'
 
+      - name: Debug workspace (optional)
+        run: |
+          echo "PWD=$(pwd)"
+          echo "Branch=${{ github.ref_name }}"
+          find . -maxdepth 2 -type d | sort
+          ls -la
+
       - name: Generate manifest
+        env:
+          INCLUDED_ROOTS: "1_architecture,2_publications,3_leraning"
         run: |
           python3 scripts/gen_manifest.py
+          test -f api/manifest.json && jq '.generated' api/manifest.json || true
 
-      - name: Commit manifest
+      - name: Commit & Push manifest (race-safe)
+        env:
+          BRANCH_NAME: ${{ github.ref_name }}
         run: |
-          git config user.name "github-actions[bot]"
+          set -e
+          git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+
           git add api/manifest.json
-          git commit -m "chore: update manifest [skip ci]" || echo "No changes"
-          git push
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+
+          git commit -m "chore: update manifest [skip ci]"
+
+          # bis zu 3 Versuche bei Race-Conditions
+          for attempt in 1 2 3; do
+            echo "Push attempt #$attempt"
+            git fetch origin "$BRANCH_NAME"
+            git rebase "origin/$BRANCH_NAME" || { echo "Rebase failed, fallback merge"; git rebase --abort || true; git pull --no-rebase --no-edit origin "$BRANCH_NAME"; }
+            if git push origin "HEAD:$BRANCH_NAME"; then
+              echo "Push succeeded."
+              break
+            fi
+            if [ "$attempt" = "3" ]; then
+              echo "Push failed after 3 attempts." >&2
+              exit 1
+            fi
+            sleep 2
+          done
+
