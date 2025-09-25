@@ -12,3 +12,35 @@
   color: var(--brand);         /* Akzentfarbe (kommt aus Tokens) */
   text-decoration: none;       /* Unterstreichung weg */
 }
+
+/* ================= Repository Tree & Preview ==================== */
+
+/* rechte Grid-Spalte darf schrumpfen, verhindert Rausschieben durch lange Titel */
+.repo-grid > div:last-child {
+  min-width: 0;
+}
+
+/* lange Pfade im Preview-Titel umbrechen */
+#previewTitle {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* Aktive Datei-Link im Baum */
+.tree a.file-active {
+  font-weight: 600;
+  color: var(--brand);          /* Brand-Farbe aus tokens.css */
+  text-decoration: none;
+}
+
+/* Aktiver Ordner (wenn README automatisch geladen wird) */
+.tree summary.folder-active {
+  font-weight: 700;
+  color: var(--brand);
+}
+
+/* Optional: Pfeil/Marker in Brand-Farbe einfärben */
+.tree details > summary.folder-active::marker {
+  color: var(--brand);
+}
+
