@@ -1,1 +1,7 @@
-/* pages.css placeholder */
+.repo-grid > div:last-child {
+  min-width: 0; /* verhindert Rausschieben durch lange Inhalte */
+}
+.preview-title {
+  overflow-wrap: anywhere; /* erlaubt Zeilenumbruch im Pfad */
+  word-break: break-word;  /* Fallback */
+}
