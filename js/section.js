@@ -37,6 +37,45 @@
     'word-break: inherit'
   ].join(';');
 
+  // --- Linkify: URLs & repo-relative Pfade klickbar machen (sicher) ---
+  function linkifySafe(raw) {
+    // 1) http(s)://… URLs
+    const urlRe = /(https?:\/\/[^\s<>'"]+)/g;
+
+    // 2) nackte Domain → https://… (Whitelist erweiterbar)
+    const bareRe = /(?:^|\s)(repository\.infektionsdynamiken\.de\/[^\s<>'"]+)/g;
+
+    // 3) repo-relative Pfade (Dateien) → interne Preview-Links
+    const relRe = /(^|[\s])((?:\.?\/)?(?:[\w\-\/]+)\.(?:txt|md|markdown|rtf|html|json|js|css|pdf|png|jpg|jpeg|gif|webp|svg))/gi;
+
+    // Erst: http(s)://… matchen und rest sicher escapen
+    let out = '';
+    let last = 0;
+    const pushEsc = (s) => { out += escapeHtml(s); };
+
+    raw.replace(urlRe, (m, _url, idx) => {
+      pushEsc(raw.slice(last, idx));
+      out += `<a href="${m}" target="_blank" rel="noopener noreferrer">${escapeHtml(m)}</a>`;
+      last = idx + m.length;
+      return m;
+    });
+    pushEsc(raw.slice(last));
+
+    // Danach nackte Domains
+    out = out.replace(bareRe, (full, dom) => {
+      const url = `https://${dom}`;
+      return full.replace(dom, `<a href="${url}" target="_blank" rel="noopener noreferrer">${escapeHtml(dom)}</a>`);
+    });
+
+    // Zum Schluss repo-relative Pfade → interne Preview
+    out = out.replace(relRe, (full, lead, rel) => {
+      const trimmed = rel.replace(/^\.\/+/, '');
+      return `${lead}<a href="#" data-preview="${escapeHtml(trimmed)}" title="In der Preview öffnen">${escapeHtml(rel)}</a>`;
+    });
+
+    return out;
+  }
+
   // ---------------- README-Handhabung ----------------
   const README_REGEX = /^readme\.(?:md|markdown|txt|rtf|html)$/i;
   const README_CANDIDATES = ['README.md','README.markdown','README.txt','README.rtf','README.html'];
@@ -208,7 +247,9 @@
       if(!resp.ok){ title.textContent='Fehler'; body.textContent='Datei nicht gefunden oder nicht lesbar.'; return; }
       const text = await resp.text();
       title.textContent = path;
-      body.innerHTML = '<pre class="readme" style="'+PRE_STYLE+'"><code style="'+CODE_STYLE+'">'+escapeHtml(text)+'</code></pre>';
+
+      // ⬇️ Linkify aktiv für Text/README
+      body.innerHTML = '<pre class="readme" style="'+PRE_STYLE+'"><code style="'+CODE_STYLE+'">'+linkifySafe(text)+'</code></pre>';
       markActiveLink(path);
     }catch(err){
       title.textContent = 'Fehler';
@@ -250,7 +291,21 @@
     }
   }
 
+  // Drucken
   printBtn?.addEventListener('click', ()=> window.print());
+
+  // Hash-Änderungen (Deep-Link)
   window.addEventListener('hashchange', ()=>{ const p=getHashPath(); if(p) openPreview(p); });
+
+  // Delegiertes Klicken für interne Preview-Links aus linkifySafe()
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest('a[data-preview]');
+    if (!a) return;
+    e.preventDefault();
+    const p = a.getAttribute('data-preview');
+    if (p) { setHashPath(p); openPreview(p); }
+  });
+
+  // Boot
   window.addEventListener('DOMContentLoaded', boot);
 })();
