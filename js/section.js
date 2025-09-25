@@ -37,44 +37,49 @@
     'word-break: inherit'
   ].join(';');
 
-  // --- Linkify: URLs & repo-relative Pfade klickbar machen (sicher) ---
-  function linkifySafe(raw) {
-    // 1) http(s)://… URLs
-    const urlRe = /(https?:\/\/[^\s<>'"]+)/g;
+ // Externe Links: im neuen Tab öffnen (true) oder im gleichen Tab (false)
+const OPEN_EXTERNAL_IN_NEW_TAB = false;
+const LINK_ATTRS = OPEN_EXTERNAL_IN_NEW_TAB ? ' target="_blank" rel="noopener noreferrer"' : '';
 
-    // 2) nackte Domain → https://… (Whitelist erweiterbar)
-    const bareRe = /(?:^|\s)(repository\.infektionsdynamiken\.de\/[^\s<>'"]+)/g;
+// --- Linkify: URLs & repo-relative Pfade klickbar machen (sicher) ---
+function linkifySafe(raw) {
+  // 1) http(s)://… URLs
+  const urlRe  = /(https?:\/\/[^\s<>'"]+)/g;
 
-    // 3) repo-relative Pfade (Dateien) → interne Preview-Links
-    const relRe = /(^|[\s])((?:\.?\/)?(?:[\w\-\/]+)\.(?:txt|md|markdown|rtf|html|json|js|css|pdf|png|jpg|jpeg|gif|webp|svg))/gi;
+  // 2) nackte Domain → https://… (Whitelist erweiterbar)
+  const bareRe = /(?:^|\s)(repository\.infektionsdynamiken\.de\/[^\s<>'"]+)/g;
 
-    // Erst: http(s)://… matchen und rest sicher escapen
-    let out = '';
-    let last = 0;
-    const pushEsc = (s) => { out += escapeHtml(s); };
+  // 3) repo-relative Pfade (Dateien) → interne Preview-Links
+  const relRe  = /(^|[\s])((?:\.?\/)?(?:[\w\-\/]+)\.(?:txt|md|markdown|rtf|html|json|js|css|pdf|png|jpg|jpeg|gif|webp|svg))/gi;
 
-    raw.replace(urlRe, (m, _url, idx) => {
-      pushEsc(raw.slice(last, idx));
-      out += `<a href="${m}" target="_blank" rel="noopener noreferrer">${escapeHtml(m)}</a>`;
-      last = idx + m.length;
-      return m;
-    });
-    pushEsc(raw.slice(last));
+  // Erst: http(s)://… matchen und Rest sicher escapen
+  let out = '';
+  let last = 0;
+  const pushEsc = (s) => { out += escapeHtml(s); };
 
-    // Danach nackte Domains
-    out = out.replace(bareRe, (full, dom) => {
-      const url = `https://${dom}`;
-      return full.replace(dom, `<a href="${url}" target="_blank" rel="noopener noreferrer">${escapeHtml(dom)}</a>`);
-    });
+  raw.replace(urlRe, (m, _url, idx) => {
+    pushEsc(raw.slice(last, idx));
+    out += `<a href="${m}"${LINK_ATTRS}>${escapeHtml(m)}</a>`;
+    last = idx + m.length;
+    return m;
+  });
+  pushEsc(raw.slice(last));
 
-    // Zum Schluss repo-relative Pfade → interne Preview
-    out = out.replace(relRe, (full, lead, rel) => {
-      const trimmed = rel.replace(/^\.\/+/, '');
-      return `${lead}<a href="#" data-preview="${escapeHtml(trimmed)}" title="In der Preview öffnen">${escapeHtml(rel)}</a>`;
-    });
+  // Danach nackte Domains
+  out = out.replace(bareRe, (full, dom) => {
+    const url = `https://${dom}`;
+    return full.replace(dom, `<a href="${url}"${LINK_ATTRS}>${escapeHtml(dom)}</a>`);
+  });
 
-    return out;
-  }
+  // Zum Schluss repo-relative Pfade → interne Preview (immer im Pane, niemals neuer Tab)
+  out = out.replace(relRe, (full, lead, rel) => {
+    const trimmed = rel.replace(/^\.\/+/, '');
+    return `${lead}<a href="#" data-preview="${escapeHtml(trimmed)}" title="In der Preview öffnen">${escapeHtml(rel)}</a>`;
+  });
+
+  return out;
+}
+
 
   // ---------------- README-Handhabung ----------------
   const README_REGEX = /^readme\.(?:md|markdown|txt|rtf|html)$/i;
