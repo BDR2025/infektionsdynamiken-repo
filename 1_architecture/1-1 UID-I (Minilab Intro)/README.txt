@@ -1,6 +1,6 @@
 Die Architektur von UID-Intro
 
-UID-Intro bildet den definierten Einstieg in jedes Minilab. Die Architektur ist bewusst schlank gehalten. Sie besteht im Kern aus einem Boot-Modul (intro-boot.js) und einem Runner für das jeweilige Modell (intro-sir.js, intro-seir.js, intro-sis.js, intro-sird.js, intro-sirv.js).
+UID-Intro bildet den definierten Einstieg in jedes Minilab. Die Architektur ist bewusst schlank gehalten. Sie besteht im Kern aus einem Boot-Modul (intro-boot.js) und einem Runner für das jeweilige Modell (intro-sir, intro-seir, intro-sis, intro-sird, intro-sirv).
 
 Das Boot-Modul übernimmt die Initialisierung und Orchestrierung. Es bindet die vorbereiteten DOM-Elemente (Canvas, KPI-Decks, Coach-Overlay) ein, startet den jeweiligen Modell-Runner, injiziert die berechneten KPIs und sorgt dafür, dass Coach-Video und Simulation gemeinsam im Ablauf erlebt werden können.
 

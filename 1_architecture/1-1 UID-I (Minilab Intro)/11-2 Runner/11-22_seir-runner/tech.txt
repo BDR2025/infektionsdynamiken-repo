@@ -1,0 +1,160 @@
+UID-Intro · SEIR Runner · tech.txt
+Zweck
+
+Der SEIR Runner führt die Intro-Simulation für SEIR aus. Er rechnet deterministisch mit festem Integrator Euler, zeichnet die Kurven ins Canvas und liefert pro Tick KPI-Werte. Er wählt anhand von Sprache, Modus und Coach die passende Etappen-Sequenz und schaltet die Peaks von E und I zum richtigen Zeitpunkt frei.
+
+Voraussetzungen im DOM
+<canvas id="intro-canvas"></canvas>
+<!-- Optional, wenn ohne Boot gearbeitet wird -->
+<div id="kpis-comp"></div>
+<div id="kpis-context"></div>
+
+
+<html> trägt lang, data-mode, data-coach. Fehlt data-coach, wählt der Runner automatisch passend zu Sprache und Modus.
+
+Einbindung
+Mit Boot
+<script type="module">
+  import * as Run from "/js/minilabs/intro/intro-seir.js";
+  window.mountIntroSEIR = Run.mountIntroSEIR || Run.default || Run;
+</script>
+<script src="/js/minilabs/intro/intro-boot.js"></script>
+
+Ohne Boot
+<script type="module">
+  import { mountIntroSEIR } from "/js/minilabs/intro/intro-seir.js";
+
+  const controller = mountIntroSEIR({
+    canvas: document.getElementById("intro-canvas"),
+    onUpdate: payload => {
+      // KPI ins UI schreiben
+      // z. B. payload.t, payload.r0, payload.reff, payload.sRel, payload.eRel, payload.iRel, payload.rRel,
+      //      payload.peakE { value, day }, payload.peakI { value, day }
+    },
+    onEnd: () => {
+      // optional
+    }
+  });
+
+  controller.play();
+  // controller.stop();
+</script>
+
+API
+mountIntroSEIR(opts) -> Controller
+
+opts.canvas   // HTMLCanvasElement oder CSS-Selector
+opts.onUpdate // Funktion: erhält pro Tick KPI-Payload
+opts.onEnd    // Funktion: wird nach der letzten Etappe aufgerufen (optional)
+opts.locale   // optional: überschreibt <html lang>
+opts.mode     // optional: überschreibt data-mode
+opts.coach    // optional: überschreibt data-coach
+
+Controller = { play(): void, stop(): void, isRunning(): boolean }
+
+KPI-Payload Beispiel
+{
+  "t": 36,
+  "r0": 3.0,
+  "reff": 1.8,
+  "sRel": 90.2,
+  "eRel": 2.9,
+  "iRel": 5.6,
+  "rRel": 1.3,
+  "peakE": { "value": 4.1, "day": 42 },
+  "peakI": { "value": 7.8, "day": 55 }
+}
+
+
+Nicht sichtbare Kurven senden keinen Prozentwert. Peaks erscheinen erst ab Erreichen des jeweiligen Maximums.
+
+Zusätzlich feuert der Runner ein CustomEvent am window
+
+window.addEventListener("idv:intro:kpi", e => {
+  const p = e.detail;
+});
+
+Timing und Rendering
+
+rAF-Delta für FPS-unabhängige Schrittzeiten
+
+Euler-Integration auf Fraktionsskala N=1
+
+Canvas-Rendering ohne Chart-Bibliothek
+
+Hilfslinien für Peaks von E und I nach Freischaltung
+
+Coach-Varianten in einem Runner
+
+Der Runner liest lang, data-mode, data-coach und wählt daraus die Sequenz. Die Sequenz bestimmt Etappen, Dauer, sichtbare Kurven, Carry-Over und Resets. Separate Dateien sind nicht nötig.
+
+Häufige Fehlerquellen
+
+Falscher Modulpfad beim Import
+
+Canvas ohne CSS-Größe ergibt 0×0 Darstellung
+
+onUpdate vergessen bei Betrieb ohne Boot
+
+Mehrfaches Mounten ohne Cleanup erzeugt doppelte Listener
+
+Minimaldiagnose
+
+controller.isRunning() nach play() prüfen
+
+Auf idv:intro:kpi lauschen
+
+canvas.width/height vs. CSS-Größe kontrollieren
+
+Boot-Abgleich für SEIR
+
+Diese Punkte stellen sicher, dass Boot und SEIR Runner nahtlos zusammenspielen.
+
+KPI-Rezepte
+
+Im Boot sind für SEIR oben S E I R vorgesehen und unten t peakE peakI. Das passt zum Payload des SEIR Runners.
+
+// Boot: KPI_RECIPES.seir
+{ top: ["S","E","I","R"], bottom: ["t","peakE","peakI"] }
+
+IDs der KPI-Ziele
+
+Boot injiziert IDs, die zu den Feldern des SEIR-Payloads passen
+
+#kpi-s-rel #kpi-e-rel #kpi-i-rel #kpi-r-rel für Prozentwerte oben
+
+#kpi-t #kpi-peakE #kpi-peakI unten
+Achte darauf, dass updateFromEvent in Boot peakE und peakI mit value und day verarbeitet. Ein Beispiel für eine saubere Ausgabe wäre
+
+if (k === "peakE" && detail.peakE) setText("#kpi-peakE", `${detail.peakE.value.toFixed(1)} % · t=${detail.peakE.day}`);
+if (k === "peakI" && detail.peakI) setText("#kpi-peakI", `${detail.peakI.value.toFixed(1)} % · t=${detail.peakI.day}`);
+
+Labels
+
+Die Standardlabels im Boot decken SEIR ab. Optional kannst du die Beschriftung verfeinern
+
+DE Peak E und Peak I
+
+EN Peak E und Peak I
+
+Mount-Kontrakt
+
+Mit Boot wird der SEIR Runner als globale Mount-Funktion bereitgestellt
+window.mountIntroSEIR = Run.mountIntroSEIR || Run.default || Run
+
+Boot ruft mount({ canvas:"#intro-canvas", onUpdate }) auf und steuert Start und Replay über play() und stop()
+
+Der Runner sendet jedes Frame idv:intro:kpi und optional onUpdate direkt
+
+Sanity-Check Snippet
+
+Füge auf einer Testseite kurz ein
+
+window.addEventListener("idv:intro:kpi", e => {
+  if (e.detail?.peakE || e.detail?.peakI) {
+    console.log("SEIR peaks", e.detail.peakE, e.detail.peakI);
+  }
+});
+
+
+Wenn beim Durchlaufen Peaks geloggt werden und die unteren Karten Werte erhalten, ist der Boot-Abgleich vollständig.
