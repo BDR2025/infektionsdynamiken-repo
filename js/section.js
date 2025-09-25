@@ -75,13 +75,17 @@
   }
 
   // ---------------- Aktive Zustände (Datei/Ordner) ----------------
-  function clearActiveStates(){
+  function clearAllActiveStates(){
     document.querySelectorAll('.tree a').forEach(a => a.classList.remove('file-active'));
     document.querySelectorAll('.tree summary').forEach(s => s.classList.remove('folder-active'));
   }
+  function clearFileActiveStates(){
+    document.querySelectorAll('.tree a').forEach(a => a.classList.remove('file-active'));
+  }
 
   function markActiveFolder(path){
-    clearActiveStates();
+    // Ordnerzustand „exklusiv“ (Datei- und Ordner-States räumen)
+    clearAllActiveStates();
     const sum = Array.from(document.querySelectorAll('.tree summary'))
       .find(s => s.dataset.path === path);
     if(sum){
@@ -93,7 +97,8 @@
   }
 
   function markActiveLink(path){
-    clearActiveStates();
+    // Nur Dateistatus anpassen; Ordner-Markierung (z. B. Auto-README) NICHT löschen
+    clearFileActiveStates();
     const link = Array.from(document.querySelectorAll('.tree a'))
       .find(a => a.getAttribute('href') === path);
     if(link){
@@ -108,7 +113,6 @@
   }
 
   function tryAutoLoadReadmeForPath(dirPathRel){
-    // dirPathRel ist relativ zum Repo-Root, z.B. "1_architecture" oder "1_architecture/1-1 UID-I (...)"
     const base = ALLOWED ? ALLOWED : '';
     const relUnderAllowed = dirPathRel.startsWith(base) ? dirPathRel.slice(base.length).replace(/^\/+/,'') : dirPathRel;
     const subtree = getSubtreeByPath(TREE_ROOT, relUnderAllowed);
@@ -116,11 +120,12 @@
 
     const readmeFullPath = findReadmePathForChildren(dirPathRel, subtree);
     if(readmeFullPath){
+      // README laden und Ordner markieren (Ordner-Markierung bleibt bestehen)
       openPreview(readmeFullPath);
-      markActiveFolder(dirPathRel); // Ordner sichtbar markieren
+      markActiveFolder(dirPathRel);
       return true;
     }
-    // selbst wenn kein README existiert: Ordner markieren
+    // kein README → Ordner trotzdem markieren
     markActiveFolder(dirPathRel);
     return false;
   }
