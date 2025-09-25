@@ -1,9 +1,9 @@
 (function(){
   const MANIFEST_URL = 'api/manifest.json';
-  const tree = document.getElementById('tree');
-  const body = document.getElementById('previewBody');
+  const tree  = document.getElementById('tree');
+  const body  = document.getElementById('previewBody');
   const title = document.getElementById('previewTitle');
-  const dl = document.getElementById('downloadBtn');
+  const dl    = document.getElementById('downloadBtn');
   const printBtn = document.getElementById('printBtn');
   const ALLOWED = (window.ALLOWED_ROOT || '').replace(/\/+$/,'');
 
@@ -18,6 +18,60 @@
   function isPdf(e){ return e==='pdf'; }
   function isBinaryLikely(e){ return ['zip','7z','rar','bin','exe','dll','wasm'].includes(e); }
 
+  // ---------------- README-Handhabung ----------------
+  const README_REGEX = /^readme\.(?:md|markdown|txt|rtf|html)$/i;
+  const README_CANDIDATES = ['README.md','README.markdown','README.txt','README.rtf','README.html'];
+
+  // globaler Manifest-Zugriff
+  let MAN = null;
+  let TREE_ROOT = {};
+
+  function getSubtreeByPath(rootObj, relPath){
+    if(!relPath) return rootObj;
+    const parts = relPath.split('/').filter(Boolean);
+    let node = rootObj;
+    for(const p of parts){
+      if(!node || typeof node !== 'object') return null;
+      node = node[p];
+    }
+    return node;
+  }
+
+  function findReadmePathForChildren(nodePath, childrenObj){
+    if(!childrenObj || typeof childrenObj !== 'object') return null;
+
+    // 1) Bevorzugte Kandidaten (deterministisch)
+    for(const cand of README_CANDIDATES){
+      if(childrenObj[cand] && childrenObj[cand].__type === 'file'){
+        return (nodePath ? nodePath + '/' : '') + cand;
+      }
+    }
+    // 2) Fallback: irgendein README.*
+    for(const name of Object.keys(childrenObj)){
+      if(README_REGEX.test(name) && childrenObj[name]?.__type === 'file'){
+        return (nodePath ? nodePath + '/' : '') + name;
+      }
+    }
+    return null;
+  }
+
+  function tryAutoLoadReadmeForPath(dirPathRel){
+    // dirPathRel ist relativ zum Repo-Root, z.B. "1_architecture" oder "1_architecture/1-1 UID-I (...)"
+    // Wir holen das passende Subtree-Objekt aus dem Manifest
+    const base = ALLOWED ? ALLOWED : '';
+    const relUnderAllowed = dirPathRel.startsWith(base) ? dirPathRel.slice(base.length).replace(/^\/+/,'') : dirPathRel;
+    const subtree = getSubtreeByPath(TREE_ROOT, relUnderAllowed);
+    if(!subtree) return false;
+
+    const readmeFullPath = findReadmePathForChildren(dirPathRel, subtree);
+    if(readmeFullPath){
+      openPreview(readmeFullPath);
+      return true;
+    }
+    return false;
+  }
+
+  // ---------------- Tree-Rendering ----------------
   function buildTree(subtree){
     tree.textContent = '';
     const root = document.createElement('details');
@@ -31,6 +85,12 @@
       Object.keys(children).sort().forEach(name => {
         const node = children[name];
         const full = (nodePath ? nodePath + '/' : '') + name;
+
+        // README.* NICHT im Tree anzeigen (wir laden es automatisch in der Preview)
+        if (node && node.__type === 'file' && README_REGEX.test(name)) {
+          return;
+        }
+
         if(node && node.__type === 'file'){
           const div = document.createElement('div');
           div.className = 'file';
@@ -44,6 +104,12 @@
           const det = document.createElement('details');
           const sm = document.createElement('summary');
           sm.textContent = name;
+          // Pfad am Summary hinterlegen, damit wir beim Klick das README des Ordners laden können
+          sm.dataset.path = full;
+          sm.addEventListener('click', () => {
+            // Nach dem Aufklappen automatisch README des Ordners in der Preview anzeigen (falls vorhanden)
+            tryAutoLoadReadmeForPath(full);
+          });
           det.appendChild(sm);
           parent.appendChild(det);
           addNodes(det, full, node);
@@ -113,13 +179,21 @@
 
   async function boot(){
     try{
-      const resp = await fetch(MANIFEST_URL, {cache:'no-cache'});
+      const resp = await fetch(MANIFEST_URL + `?v=${Date.now()}`, {cache:'no-cache'});
       if(!resp.ok) throw new Error('Manifest nicht gefunden');
-      const man = await resp.json();
-      const treeRoot = (man.tree && man.tree[ALLOWED]) ? man.tree[ALLOWED] : {};
-      buildTree(treeRoot);
+      MAN = await resp.json();
+
+      // Wurzel (nur der erlaubte Teilbaum)
+      TREE_ROOT = (MAN.tree && MAN.tree[ALLOWED]) ? MAN.tree[ALLOWED] : {};
+      buildTree(TREE_ROOT);
+
       const p = getHashPath();
-      if(p){ openPreview(p); }
+      if(p){
+        openPreview(p);
+      }else{
+        // Kein Deep-Link: README des Root-Ordners automatisch anzeigen (falls vorhanden)
+        tryAutoLoadReadmeForPath(ALLOWED);
+      }
     }catch(e){
       tree.textContent = 'Manifest konnte nicht geladen werden. Bitte GitHub Action aktivieren oder manifest.json bereitstellen.';
       console.error(e);
