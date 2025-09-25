@@ -5,3 +5,10 @@
   overflow-wrap: anywhere; /* erlaubt Zeilenumbruch im Pfad */
   word-break: break-word;  /* Fallback */
 }
+
+
+.tree a.file-active {
+  font-weight: 600;            /* fett */
+  color: var(--brand);         /* Akzentfarbe (kommt aus Tokens) */
+  text-decoration: none;       /* Unterstreichung weg */
+}
