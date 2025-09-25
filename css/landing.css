@@ -218,3 +218,17 @@ html[data-mode="university"] .landing-header .iconbtn.globe:focus-visible{
   text-transform: uppercase;
 }
 
+/* README/Code-Preview */
+#preview pre {
+  white-space: pre-wrap;      /* erzwingt Umbrüche */
+  word-wrap: break-word;      /* lange Wörter umbrechen */
+  overflow-wrap: anywhere;    /* moderne Variante für responsive Umbrüche */
+  max-width: 100%;            /* Container nicht sprengen */
+  box-sizing: border-box;
+}
+#preview code {
+  display: block;
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
