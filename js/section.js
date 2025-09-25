@@ -166,8 +166,13 @@
           sm.textContent = name;
           sm.dataset.path = full; // Ordnerpfad merken
           sm.addEventListener('click', () => {
-            // Nach dem Aufklappen automatisch README des Ordners in der Preview anzeigen (falls vorhanden)
-            tryAutoLoadReadmeForPath(full);
+            // Browser darf zuerst den open/close-State umschalten …
+            setTimeout(() => {
+              // … dann nur beim AUFKLAPPEN Auto-README laden + Ordner markieren
+              if (det.open) {
+                tryAutoLoadReadmeForPath(full);
+              }
+            }, 0);
           });
           det.appendChild(sm);
           parent.appendChild(det);
