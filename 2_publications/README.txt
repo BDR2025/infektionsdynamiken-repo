@@ -1,1 +1,3 @@
-Publikationen — Platzhalter
+Publikationen
+
+Inhalte folgen demnächst ...

@@ -1,1 +1,3 @@
-Lehr- & Lernunterlagen — Platzhalter
+Lehr- & Lernunterlagen
+
+Inhalte folgen demnächst...
