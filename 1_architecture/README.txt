@@ -1,12 +1,16 @@
-Systemarchitektur der Minilabs
+Die Architektur von UID-Explore
 
-Die Minilabs von Understanding Infection Dynamics (UID) sind in drei Teile gegliedert: Intro, Explore und Challenge. Zusammen bilden sie eine Lernreise, die mit einem geführten Einstieg beginnt, im eigenständigen Erkunden vertieft wird und in einer aktiven Anwendung mündet.
+UID-Explore ist das Herzstück des Projektes und deutlich komplexer aufgebaut als UID-Intro. Während Intro eine festgelegte Abfolge zeigt, eröffnet Explore den Lernenden die Möglichkeit, Modelle aktiv zu verändern und eigene Szenarien zu erkunden.
 
-Die technische Grundlage dafür ist eine Systemarchitektur, die genau beschreibt, wie Berechnung, Visualisierung, Kennzahlen und Coach-Kommentare ineinandergreifen. Sie ist so konzipiert, dass Lernende die Abläufe intuitiv nachvollziehen können und Entwickler gleichzeitig eine klare Struktur vorfinden, die sich erweitern und pflegen lässt.
+Die Architektur gliedert sich in drei Schichten:
 
-Alle Bestandteile dieser Architektur sind in diesem Repository frei zugänglich. Die Erläuterungen sind bewusst so formuliert, dass sowohl interessierte Nutzer als auch Entwickler sie verstehen. Schritt für Schritt wird gezeigt, wie die einzelnen Bausteine zusammenspielen und welche Rolle sie in der Lernreise übernehmen.
+Input-Schicht
+Hier liegt das Parameter-Modul, das die Eingaben der Lernenden entgegennimmt. Über Regler, Eingabefelder und Buttons werden Werte verändert, die anschließend über den Event-Bus weitergeleitet werden.
 
-Im Folgenden werden die drei Kernteile vorgestellt: 
-  - UID-I für die Coach-gestützten Intro-Sequenzen, 
-  - UID-E für die interaktiven Modelle der Explore-Umgebungen und 
-  - UID-C für die Challenge-Gamification.
+Basisschicht
+In dieser Ebene arbeiten Director, Engine und der Event-Bus zusammen. Sie stellen sicher, dass Eingaben konsistent werden, die numerischen Berechnungen zuverlässig ablaufen und alle weiteren Module stabil miteinander kommunizieren.
+
+Darstellungsschicht
+Darauf aufbauend befinden sich die Visualisierungen. Dazu gehören die Charts mit ihren Kurven und Diagrammen, die KPIs mit verdichteten Kennzahlen, die Vectors mit intuitiven Overlays, die Formeln mit der mathematischen Darstellung und ergänzend das Grid, das die Anteile der Bevölkerung in einer Rasterdarstellung sichtbar macht.
+
+Durch diese klare Dreiteilung bleibt das System für Lernende leicht zugänglich und für Entwickler übersichtlich. Wer mit Explore arbeitet, erlebt eine einfache und anschauliche Umgebung, während auf der technischen Ebene eine modulare Architektur bereitsteht, die jederzeit erweitert und gepflegt werden kann. Alle Bestandteile von UID-Explore sind in diesem Repository öffentlich zugänglich und frei verfügbar.
