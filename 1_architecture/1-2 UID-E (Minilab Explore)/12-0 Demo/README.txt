@@ -6,4 +6,4 @@ Die Oberfläche ist bewusst schlank gehalten. Kopf- und Fußzeilen, Coach-Elemen
 
 Die Demo eignet sich als Referenz für Entwickler:innen, um die Interaktion zwischen den Schichten nachzuvollziehen, und kann als Ausgangspunkt für eigene Erweiterungen dienen.
 
-👉 Zur Demo: repository.infektionsdynamiken.de/demo_12-0.html 
+👉 Zur Demo: repository.infektionsdynamiken.de/0_demo/12-0-34_UID-E-PG.html
