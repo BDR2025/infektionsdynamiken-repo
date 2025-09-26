@@ -1,0 +1,192 @@
+/*! =======================================================================
+ * Infection Dynamics · Parameter-Tool · Standalone Skin
+ * Version: v2.3.0-skin · Build: 2025-09-19 · License: CC BY 4.0
+ * Author: Nic + ChatGPT · infectiondynamics.eu
+ *
+ * Zweck
+ * - Vollständig gekapseltes Styling des Parameter-Tools (ohne globale Abhängigkeiten)
+ * - Regler-Ansicht (Accordion + 2-Zeilen-Layout) und Formel-Ansicht (Formel EINZEILIG + Slider darunter)
+ * - KPI-Grid, das die volle Slot-Breite nutzt (auto-fit, minmax)
+ * - Gezielt-dezente Puls-Hervorhebung gekoppelte Zahlen (pt-num) in Bruch/Produkt
+ *
+ * Struktur
+ *  1) Basissetup (Root/Theme/Toolbar)
+ *  2) Accordion-Sections (Regler-Ansicht)
+ *  3) Parameterraster (Label / Input / Unit)
+ *  4) Slider + Number-Feld (Regler-Ansicht)
+ *  5) KPI-Grid (vollbreit, elastisch)
+ *  6) Formel-Ansicht: Karten-Grid (immer 1 Spalte), Einzeiler + Slider, Puls-Highlight
+ *  7) Kleines Responsive-Tuning (schmale Screens)
+ * =======================================================================*/
+
+/* -----------------------------------------------------------------------
+ * 1) Basissetup
+ * -------------------------------------------------------------------- */
+#parameter-tool { display:block; }
+#parameter-tool.pt, .pt { box-sizing: border-box; color: var(--pt-text, #e5e7eb); }
+
+/* Theme Defaults (kapselt Farbtokens & Spaltenbreiten) */
+.pt{
+  --pt-bg:      #0b1220;
+  --pt-panel:   #0e1628;
+  --pt-border:  #1f2a3d;
+  --pt-text:    #e5e7eb;
+  --pt-muted:   #9aa7bd;
+  --pt-accent:  #6aa0ff;
+
+  --pt-col-label: 160px;
+  --pt-col-input: minmax(220px, 1fr);
+  --pt-col-unit:  56px;
+  --pt-num-width: 96px;
+
+  --pt-kpi-min: 160px; /* Basis-Mindestbreite pro KPI-Kachel */
+}
+
+/* Toolbar (View Toggle) */
+.pt .pt-toolbar{ display:flex; gap:8px; margin:4px 0 10px; }
+.pt .pt-ctrl{
+  padding:6px 10px; border-radius:8px; border:1px solid var(--pt-border);
+  background:#0f1a2e; color:var(--pt-text); font-size:.9rem; line-height:1; cursor:pointer;
+}
+.pt .pt-ctrl[aria-pressed="true"]{ background:var(--pt-accent); color:#0b1220; border-color:transparent; }
+
+/* -----------------------------------------------------------------------
+ * 2) Accordion-Sections (Regler-Ansicht)
+ * -------------------------------------------------------------------- */
+.pt .pt-section{
+  border:1px solid var(--pt-border);
+  border-radius:12px;
+  background:var(--pt-panel);
+  margin:12px 0;
+  overflow:hidden;
+}
+.pt .pt-section-head{
+  width:100%; display:flex; align-items:center; justify-content:space-between; gap:10px;
+  padding:12px 14px; background:transparent; color:var(--pt-text);
+  border:0; cursor:pointer; text-align:left;
+}
+.pt .pt-section-head:focus-visible{ outline:2px solid var(--pt-accent); outline-offset:2px; }
+.pt .pt-section-head-label{ font-weight:600; font-size:.95rem; }
+.pt .pt-section-caret{
+  width:10px; height:10px; border-right:2px solid var(--pt-muted); border-bottom:2px solid var(--pt-muted);
+  transform:rotate(-45deg); transition:transform .15s; margin-left:8px;
+}
+.pt .is-open .pt-section-caret{ transform:rotate(45deg); }
+.pt .pt-section-body{ padding:8px 14px 14px; }
+
+/* -----------------------------------------------------------------------
+ * 3) Parameterraster (Regler-Ansicht)
+ * -------------------------------------------------------------------- */
+.pt .pt-row{
+  display:grid; gap:8px 12px; align-items:center; padding:10px 0;
+  grid-template-columns: var(--pt-col-label) 1fr var(--pt-col-unit);
+  grid-template-areas:
+    "label . ."
+    "input input unit";
+  border-top:1px dashed var(--pt-border);
+}
+.pt .pt-row:first-child{ border-top:none; }
+.pt .pt-label{ grid-area:label; font-size:.95rem; color:var(--pt-text); }
+.pt .pt-unit { grid-area:unit;  text-align:right; color:var(--pt-muted); }
+.pt .pt-input{
+  grid-area:input; display:grid; gap:8px; align-items:center;
+  grid-template-columns: 3fr minmax(var(--pt-num-width), 1fr);
+}
+
+/* -----------------------------------------------------------------------
+ * 4) Slider + Number-Feld (Regler-Ansicht)
+ * -------------------------------------------------------------------- */
+.pt input[type="range"]{
+  width:100%; height:6px; border-radius:999px; outline:none; appearance:none;
+  background:linear-gradient(to right, var(--pt-accent), #2c3a55);
+}
+.pt input[type="range"]::-webkit-slider-thumb{
+  appearance:none; width:16px; height:16px; border-radius:50%;
+  background:#fff; border:2px solid var(--pt-accent);
+}
+.pt input[type="range"]::-moz-range-thumb{
+  width:16px; height:16px; border-radius:50%;
+  background:#fff; border:2px solid var(--pt-accent);
+}
+.pt .pt-number{
+  width:100%; height:32px; padding:0 8px; border:1px solid var(--pt-border);
+  border-radius:8px; background:#0f1a2e; color:var(--pt-text);
+}
+.pt .pt-number.pt-disabled{ opacity:.6; cursor:not-allowed; background:#0b1220; }
+
+/* -----------------------------------------------------------------------
+ * 5) KPI-Grid (immer volle Slot-Breite, elastisch)
+ * -------------------------------------------------------------------- */
+.mle-controls .pt-frame, .pt .pt-kpis{ min-width:0; } /* min-content-Falle vermeiden */
+
+.pt .pt-kpis{
+  display:grid; width:100%; gap:12px;
+  grid-template-columns: repeat(auto-fit, minmax(var(--pt-kpi-min), 1fr));
+}
+@media (min-width:1024px){ .pt .pt-kpis{ --pt-kpi-min: 180px; } }
+@media (min-width:1440px){ .pt .pt-kpis{ --pt-kpi-min: 200px; } }
+
+.pt .pt-kpi{
+  min-width:0; width:auto; /* Kacheln folgen Grid-Tracks; Text darf umbrechen */
+  background:var(--pt-panel); border:1px solid var(--pt-border); border-radius:10px; padding:10px 12px;
+}
+.pt .pt-kpi-title{ font-size:.85rem; color:var(--pt-muted); margin-bottom:4px; }
+.pt .pt-kpi-value{ font-size:1.1rem; font-weight:700; }
+
+/* -----------------------------------------------------------------------
+ * 6) Formel-Ansicht
+ *    - Karten-Grid: IMMER 1 Spalte (auch Desktop) für maximale Breite
+ *    - Formel-Einzeiler: kein Umbruch, Snap-Scaling, zielgenaues Zahlen-Highlight
+ *    - Slider unter der Formel
+ * -------------------------------------------------------------------- */
+.pt .pt-form-grid{ display:grid; gap:12px; grid-template-columns:1fr; } /* 1 Spalte fix */
+.pt .pt-form-card{
+  border:1px solid var(--pt-border); border-radius:12px; background:var(--pt-panel);
+  padding:12px; display:grid; gap:10px;
+}
+.pt .pt-form-title{ font-weight:600; font-size:.95rem; }
+
+/* Formel-Einzeiler */
+.pt .pt-eq-row{ display:flex; align-items:center; white-space:nowrap; min-height:28px; }
+.pt .pt-eq{
+  display:inline-block;
+  /* JS setzt transform-origin auf Bruchzentrum (ruhiger Scale-Anker) */
+  transform-origin:left center;
+  will-change:transform;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: .01em;
+}
+.pt .pt-eq .op{ opacity:.9; }
+
+/* Zielgenaues Highlight NUR für betroffene Zahlen (Zähler/Nenner/Multiplikand) */
+.pt .pt-eq .pt-num{ transition: color .18s ease, text-shadow .18s ease; }
+.pt .pt-eq .pt-num.pulsed{ color:var(--pt-accent); text-shadow:0 0 .6px var(--pt-accent); }
+
+/* Slider-Zeile unter der Formel (ohne Direktfeld) */
+.pt .pt-form-ctrl{ display:flex; align-items:center; gap:10px; }
+.pt .pt-form-ctrl input[type="range"]{
+  flex:1; height:6px; border-radius:999px; appearance:none;
+  background:linear-gradient(to right, var(--pt-accent), #2c3a55); outline:none;
+}
+.pt .pt-form-ctrl input[type="range"]::-webkit-slider-thumb{
+  appearance:none; width:16px; height:16px; border-radius:50%;
+  background:#fff; border:2px solid var(--pt-accent);
+}
+.pt .pt-form-ctrl input[type="range"]::-moz-range-thumb{
+  width:16px; height:16px; border-radius:50%; background:#fff; border:2px solid var(--pt-accent);
+}
+.pt .pt-form-unit{ color:var(--pt-muted); white-space:nowrap; }
+
+/* -----------------------------------------------------------------------
+ * 7) Schmale Screens (Regler-Ansicht Raster einklappen)
+ * -------------------------------------------------------------------- */
+@media (max-width: 420px){
+  .pt .pt-row{
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "label"
+      "input"
+      "unit";
+  }
+  .pt .pt-unit{ text-align:left; }
+}
