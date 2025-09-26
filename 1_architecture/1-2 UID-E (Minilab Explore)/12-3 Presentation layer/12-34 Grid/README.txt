@@ -1,0 +1,13 @@
+GridWave im Detail
+
+GridWave erweitert die Darstellung der Infektionsdynamik um eine Rasteransicht. Während Kurven den zeitlichen Verlauf zeigen und das Zustandsvektorrad die Zusammensetzung im Kreis sichtbar macht, verwandelt GridWave dieselben Informationen in ein farbiges Mosaik. Jede Zelle steht für eine virtuelle Person und erscheint grün, rot oder blau – je nachdem ob sie empfänglich, infiziert oder genesen ist. So entsteht der Eindruck einer Welle, die sich ausbreitet, oder von Clustern, die sich unregelmäßig formieren.
+
+Trotz der anschaulichen Oberfläche bleibt GridWave vollständig an die mathematischen Anteile des Modells gebunden. Es gibt keine eigene Dynamik und keine verdeckte Berechnung. Der Anteil der roten, blauen und grünen Zellen entspricht jederzeit exakt den Werten, die der Rechenkern liefert. So bleibt die wissenschaftliche Genauigkeit gewahrt und zugleich ein Bild geschaffen, das sofort verständlich ist.
+
+Die Technik beruht auf einer festen Sortierung des Rasters, die vorgibt, welche Zellen zuerst wechseln. In der Wellenvariante geschieht dies von innen nach außen. In der Cluster-Variante sorgt ein geglättetes Rauschfeld dafür, dass nicht alle Veränderungen gleichmäßig verlaufen. In der Mischform bleibt der Kern geordnet und geschlossen, während die äußeren Bereiche diffuser wirken. Der Verlauf erscheint dadurch je nach Einstellung dicht, unregelmäßig oder zufällig, ohne dass die Modelltreue verloren geht.
+
+Wie andere Darstellungen ist GridWave eng mit dem Ereignisfluss des Systems verbunden. Sobald ein neuer Zeitschritt berechnet oder ein Parameter geändert wird, aktualisiert das Raster die Anteile und zeichnet sie neu. So bleibt es stets synchron mit Kurven, Kennzahlen und Vektorrad. Übergänge sind weich gestaltet, sodass auch bei vielen gleichzeitig wechselnden Zellen kein Flimmern entsteht.
+
+Die Farben stammen aus gemeinsamen Farbdefinitionen des Projekts. Empfängliche Zellen erscheinen grün, infizierte rot und genesene blau. Damit bleibt GridWave im Erscheinungsbild konsistent mit den anderen Visualisierungen und passt sich automatisch an die Themen für Schule oder Universität an.
+
+Für Entwickler ist GridWave ein modularer Baustein, der dem gleichen Ereignisfluss folgt wie die anderen Widgets und sich nahtlos einfügt. Für Lernende ist es eine zusätzliche Perspektive, die ohne Vorkenntnisse verständlich ist und abstrakte Zahlen in ein Bild übersetzt, das man sofort nachvollziehen kann.

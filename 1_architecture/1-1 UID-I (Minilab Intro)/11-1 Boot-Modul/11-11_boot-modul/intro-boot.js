@@ -1,5 +1,5 @@
 /*!
- * File:      js/minilabs/intro/intro-boot.js
+ * File:      intro-boot.js
  * Project:   Understanding Infection Dynamics · Infektionsdynamiken verstehen
  * Type:      Open Educational Resource (OER)
  * Authors:   B. D. Rausch · A. Heinz
