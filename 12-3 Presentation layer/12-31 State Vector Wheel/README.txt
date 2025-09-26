@@ -1,7 +1,0 @@
-Das Zustandsvektorrad im Detail
-
-Das Zustandsvektorrad übersetzt die mathematische Idee des Zustandsvektors in eine anschauliche kreisförmige Darstellung. Der äußere Ring zeigt die Zusammensetzung der Population in den verschiedenen Kompartimenten und macht sichtbar wie sich die Anteile im Verlauf einer Simulation verschieben. Im Inneren treten die Nadeln hinzu, die zentrale Modellparameter wie Infektionsrate, Genesungsrate oder Latenzrate markieren. Sie verändern Länge und Stärke in Abhängigkeit von den aktuellen Werten und machen dadurch nachvollziehbar wie die Stellgrößen des Modells wirken.
-
-Besonders prägnant ist der Reff-Zeiger, der immer auf zwölf Uhr steht und mit seiner Länge die aktuelle Ausbreitungsdynamik anzeigt. Wird mehr als eine Person pro Infizierten angesteckt, erscheint er rot und ragt weit hinaus. Liegt der Wert genau bei eins, färbt er sich weiß. Sobald die Ausbreitung zurückgeht, wird er grün und deutlich kürzer. In der Mitte des Rades sitzt eine kleine Scheibe, die den aktuellen Zeitpunkt einblendet und die Darstellung fest im Ablauf der Simulation verankert.
-
-Das Zustandsvektorrad verbindet die momentane Zusammensetzung der Population mit den Kräften, die den Verlauf bestimmen. Es ist technisch als Canvas-Darstellung umgesetzt, reagiert auf die Ereignisse der Simulation und bleibt dadurch immer synchron mit Kurvenbild und Kennzahlen. Auf diese Weise entsteht ein verständliches und zugleich präzises Instrument, das mathematische Modelle unmittelbar erfahrbar macht.
