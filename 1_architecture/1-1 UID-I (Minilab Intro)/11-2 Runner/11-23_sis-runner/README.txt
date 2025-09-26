@@ -1,0 +1,7 @@
+Der SIS Runner im Detail
+
+Der SIS Runner zeigt das Modell ohne dauerhaft Genesene. Wer genesen ist, wird wieder empfänglich und kehrt in die Suszeptiblen zurück. Im Ablauf werden deshalb die Kurven für S und I geführt und so inszeniert, dass die endemische Dynamik sichtbar wird. Die Darstellung bleibt bewusst reduziert und konzentriert sich auf das Zusammenspiel von empfänglichen und erkrankten Personen im Zeitverlauf.
+
+Anders als beim SIR oder SEIR Runner gibt der SIS Runner kein Genesenenfach und keine Peaks für E oder I aus. Stattdessen berechnet er das endemische Gleichgewicht der Erkrankten und macht es als I Stern sichtbar. Ergänzend zeigt er die Zeit bis zur Annäherung an dieses Gleichgewicht als t neun fünf. Beide Größen werden zum passenden Zeitpunkt eingeblendet und helfen, die langfristige Stabilisierung im Modell zu verstehen.
+
+Die übrige Logik bleibt gleich. Die Simulation läuft deterministisch mit Euler Integration, die Darstellung ist festgelegt und reproduzierbar, und die Sequenz folgt den coachspezifischen Dramaturgien. So entsteht derselbe geführte Ablauf wie in den anderen Intros, hier jedoch mit dem Fokus auf das Wiederanfälligwerden und die Annäherung an ein stabiles Gleichgewicht.
