@@ -1,9 +1,0 @@
-Das Boot-Modul von UID-Intro
-
-Das Boot-Modul ist der Orchestrator von UID-Intro. Es sorgt dafür, dass die vorbereiteten Bausteine der Intro-Seite zu einem stimmigen Ganzen zusammenlaufen. Während der Runner die Berechnungen und die Darstellung der Simulation übernimmt, bindet das Boot-Modul diese Abläufe in die Benutzeroberfläche ein und stellt sicher, dass Visualisierungen, KPI-Decks und Coach-Overlay in der richtigen Form zur Verfügung stehen.
-
-Beim Start einer Intro-Seite sammelt das Boot-Modul die notwendigen Elemente aus dem DOM: das Canvas für die Darstellung der Kurven, die vorgesehenen Hosts für die Kennzahlen, die Bedienelemente für Replay und Video sowie das Overlay für den Coach. Anschließend ruft es den passenden Runner auf und übergibt ihm die benötigten Referenzen. Damit ist gewährleistet, dass der Runner seine Ergebnisse nicht im luftleeren Raum produziert, sondern unmittelbar in die Seite eingebettet ist.
-
-Während die Simulation abläuft, empfängt das Boot-Modul kontinuierlich die vom Runner ausgesandten Kennzahlen und injiziert sie in die vorgesehenen Decks. So werden die relevanten Werte in Echtzeit sichtbar, ohne dass sich die Nutzer darum kümmern müssen. Gleichzeitig steuert das Boot-Modul das Coach-Overlay: Es öffnet und schließt das Video, sorgt für eine saubere Wiedergabe und verbindet die geführte Erzählung mit der laufenden Simulation.
-
-Das Boot-Modul ist damit kein Rechenkern, sondern die Klammer, die alle Bestandteile zusammenhält. Es verbindet die statische HTML-Struktur mit dem dynamischen Ablauf des Runners, integriert die didaktischen Elemente und stellt sicher, dass die Intro-Seite als harmonisches Gesamterlebnis funktioniert.
