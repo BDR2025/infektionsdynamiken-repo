@@ -67,24 +67,24 @@ export function mountIntroSIRD(userOpts = {}) {
   ==================================================================== */
   const SEQUENCES = {
     ben: [
-      { visible:['I','S'],         duration:10, carryPrev:false, resetBefore:false }, // Step 1: I+S
-      { visible:['D','R'],         duration: 8, carryPrev:false, resetBefore:true  }, // Step 2: D+R (wipe before)
-      { visible:['S','I','R','D'], duration:10, carryPrev:false, resetBefore:true  }  // Step 3: all (wipe before)
+      { visible:['I','S'],         duration: 4, carryPrev:false, resetBefore:false }, // Step 1: I+S
+      { visible:['D','R'],         duration: 4, carryPrev:false, resetBefore:true  }, // Step 2: D+R (wipe before)
+      { visible:['S','I','R','D'], duration: 4, carryPrev:false, resetBefore:true  }  // Step 3: all (wipe before)
     ],
     mila: [
-      { visible:['I','S'],         duration:12, carryPrev:false, resetBefore:false },
-      { visible:['D','R'],         duration:10, carryPrev:false, resetBefore:true  },
-      { visible:['S','I','R','D'], duration:12, carryPrev:false, resetBefore:true  }
+      { visible:['I','S'],         duration: 4, carryPrev:false, resetBefore:false },
+      { visible:['D','R'],         duration: 4, carryPrev:false, resetBefore:true  },
+      { visible:['S','I','R','D'], duration: 4, carryPrev:false, resetBefore:true  }
     ],
     chloe: [
-      { visible:['I','S'],         duration:10, carryPrev:false, resetBefore:false },
-      { visible:['D','R'],         duration: 8, carryPrev:false, resetBefore:true  },
-      { visible:['S','I','R','D'], duration:10, carryPrev:false, resetBefore:true  }
+      { visible:['I','S'],         duration: 4, carryPrev:false, resetBefore:false },
+      { visible:['D','R'],         duration: 4, carryPrev:false, resetBefore:true  },
+      { visible:['S','I','R','D'], duration: 4, carryPrev:false, resetBefore:true  }
     ],
     archer: [
-      { visible:['I','S'],         duration:12, carryPrev:false, resetBefore:false },
-      { visible:['D','R'],         duration:10, carryPrev:false, resetBefore:true  },
-      { visible:['S','I','R','D'], duration:12, carryPrev:false, resetBefore:true  }
+      { visible:['I','S'],         duration: 4, carryPrev:false, resetBefore:false },
+      { visible:['D','R'],         duration: 4, carryPrev:false, resetBefore:true  },
+      { visible:['S','I','R','D'], duration: 4, carryPrev:false, resetBefore:true  }
     ]
   };
 

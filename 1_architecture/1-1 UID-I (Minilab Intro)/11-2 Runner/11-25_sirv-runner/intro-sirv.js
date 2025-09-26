@@ -74,28 +74,28 @@ export function mountIntroSIRV(userOpts = {}) {
   ==================================================================== */
   const SEQUENCES = {
     ben:   [
-      { visible:['I','S'],            duration:10, carryPrev:false, resetBefore:false, vaccOn:false }, // 1) I+S
-      { visible:['R'],                duration: 8, carryPrev:true,  resetBefore:false, vaccOn:false }, // 2) R (I+S Spur bleibt)
-      { visible:['V'],                duration: 8, carryPrev:true,  resetBefore:false, vaccOn:true  }, // 3) V (Spuren bleiben)
-      { visible:['S','I','R','V'],    duration:12, carryPrev:false, resetBefore:true,  vaccOn:true  }  // 4) alle, wipe before
+      { visible:['I','S'],            duration: 4, carryPrev:false, resetBefore:false, vaccOn:false }, // 1) I+S
+      { visible:['R'],                duration: 4, carryPrev:true,  resetBefore:false, vaccOn:false }, // 2) R (I+S Spur bleibt)
+      { visible:['V'],                duration: 4, carryPrev:true,  resetBefore:false, vaccOn:true  }, // 3) V (Spuren bleiben)
+      { visible:['S','I','R','V'],    duration: 4, carryPrev:false, resetBefore:true,  vaccOn:true  }  // 4) alle, wipe before
     ],
     mila:  [
-      { visible:['I','S'],            duration:12, carryPrev:false, resetBefore:false, vaccOn:false },
-      { visible:['R'],                duration:10, carryPrev:true,  resetBefore:false, vaccOn:false },
-      { visible:['V'],                duration:10, carryPrev:true,  resetBefore:false, vaccOn:true  },
-      { visible:['S','I','R','V'],    duration:14, carryPrev:false, resetBefore:true,  vaccOn:true  }
+      { visible:['I','S'],            duration: 4, carryPrev:false, resetBefore:false, vaccOn:false },
+      { visible:['R'],                duration: 4, carryPrev:true,  resetBefore:false, vaccOn:false },
+      { visible:['V'],                duration: 4, carryPrev:true,  resetBefore:false, vaccOn:true  },
+      { visible:['S','I','R','V'],    duration: 4, carryPrev:false, resetBefore:true,  vaccOn:true  }
     ],
     chloe: [
-      { visible:['I','S'],            duration:10, carryPrev:false, resetBefore:false, vaccOn:false },
-      { visible:['R'],                duration: 8, carryPrev:true,  resetBefore:false, vaccOn:false },
-      { visible:['V'],                duration: 8, carryPrev:true,  resetBefore:false, vaccOn:true  },
-      { visible:['S','I','R','V'],    duration:12, carryPrev:false, resetBefore:true,  vaccOn:true  }
+      { visible:['I','S'],            duration: 4, carryPrev:false, resetBefore:false, vaccOn:false },
+      { visible:['R'],                duration: 4, carryPrev:true,  resetBefore:false, vaccOn:false },
+      { visible:['V'],                duration: 4, carryPrev:true,  resetBefore:false, vaccOn:true  },
+      { visible:['S','I','R','V'],    duration: 4, carryPrev:false, resetBefore:true,  vaccOn:true  }
     ],
     archer:[
-      { visible:['I','S'],            duration:12, carryPrev:false, resetBefore:false, vaccOn:false },
-      { visible:['R'],                duration:10, carryPrev:true,  resetBefore:false, vaccOn:false },
-      { visible:['V'],                duration:10, carryPrev:true,  resetBefore:false, vaccOn:true  },
-      { visible:['S','I','R','V'],    duration:14, carryPrev:false, resetBefore:true,  vaccOn:true  }
+      { visible:['I','S'],            duration: 4, carryPrev:false, resetBefore:false, vaccOn:false },
+      { visible:['R'],                duration: 4, carryPrev:true,  resetBefore:false, vaccOn:false },
+      { visible:['V'],                duration: 4, carryPrev:true,  resetBefore:false, vaccOn:true  },
+      { visible:['S','I','R','V'],    duration: 4, carryPrev:false, resetBefore:true,  vaccOn:true  }
     ]
   };
 
