@@ -4,4 +4,4 @@ Diese Seite zeigt eine reduzierte Demo des Presentation Layers. Sie ist bewusst 
 
 Die Coach-Funktionen fehlen in dieser Demo. Im Mittelpunkt steht allein die Visualisierung. Das Raster passt sich dem Thema automatisch an und kann zwischen Proportional, Wave, Cluster und der Mischform wechseln. Die Hybrid-Regler steuern Kernradius und Anstieg. So lässt sich die Darstellung schnell ausprobieren, ohne das vollständige Explore-Gerüst zu laden.
 
-👉 repository.infektionsdynamiken.de/0_demo/12-0-34_UID-E-PG.html
+👉 https://repository.infektionsdynamiken.de/0_demo/12-0-34_UID-E-PG.html
