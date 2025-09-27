@@ -1,7 +1,20 @@
 Basis-Schicht
 
-Die Basis bildet das Fundament von UID-Explore. In ihr laufen alle zentralen Prozesse zusammen, die für eine konsistente und stabile Simulation notwendig sind. Hier werden Eingaben überprüft, in konsistente Parameter überführt und die numerischen Berechnungen ausgeführt.
+Die Basis-Schicht von UID-Explore ist vollständig als ESM-Struktur aufgebaut (ESM bedeutet EcmaScript Modules und bezeichnet die moderne Art, wie JavaScript-Dateien sauber importiert und exportiert werden). Sie bildet das Fundament der Engine und sorgt dafür, dass Eingaben, Normalisierung, Berechnung und Kommunikation in klar getrennten Modulen ablaufen. Diese Gliederung macht den Kern verständlich, erweiterbar und zuverlässig.
 
-Die Basis ist so organisiert, dass sie zuverlässig und transparent arbeitet. Sie stellt sicher, dass Eingaben aus der Input-Schicht korrekt verarbeitet werden, dass die Simulationen deterministisch und stabil ablaufen und dass Ergebnisse in einer einheitlichen Form an die darstellenden Module weitergegeben werden.
+Die fünf zentralen Module sind:
 
-Durch ihre Konzentration auf Logik und Berechnung bleibt die Basis klar abgegrenzt. Sie ist unabhängig von Oberflächen oder Visualisierungen und kann jederzeit erweitert oder angepasst werden, ohne dass sich dies unmittelbar auf die Darstellung auswirkt.
+index.js
+Der Barrel-Einstiegspunkt. Er bündelt die wichtigsten Exporte aus der Basis-Schicht und macht Director und Bus nach außen sichtbar.
+
+bus.js
+Der Event-Bus verteilt Ereignisse im System und spiegelt sie in den DOM, sodass Eingaben, Berechnungen und Darstellungen entkoppelt bleiben und leicht debuggt werden können.
+
+schema.js
+Das Schema definiert gültige Parameter, prüft Eingaben, setzt Grenzen und sorgt dafür, dass verbundene Werte wie R0, Beta, Gamma oder die infektiöse Dauer konsistent bleiben.
+
+engine.js
+Die Engine berechnet die Dynamik der Modelle. Sie setzt Gleichungen wie SIR, SEIR, SIRD oder SIRV mit Verfahren wie Euler, Heun oder Runge-Kutta um und liefert Zeitreihen für die Darstellung.
+
+uid.js
+Der Director steuert den Ablauf. Er nimmt Eingaben entgegen, nutzt das Schema zur Prüfung, ruft die Engine auf und verteilt die Ergebnisse über den Bus.
