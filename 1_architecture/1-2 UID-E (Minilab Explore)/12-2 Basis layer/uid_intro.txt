@@ -1,0 +1,13 @@
+Der UID-E Director im Detail
+
+Der Director ist das Steuerzentrum der UID Explore Engine. Er nimmt Eingaben entgegen, hält sie konsistent und stößt die Berechnungen in der Engine an. Auf diese Weise verbindet er die Parameter aus der Oberfläche mit den Ergebnissen der Simulation und sorgt dafür, dass alles im richtigen Rhythmus abläuft.
+
+Immer wenn ein Regler bewegt oder ein Wert gesetzt wird, verarbeitet der Director diese Änderung. Er nutzt schema.js, um die Eingaben zu normalisieren und Kopplungen zwischen abhängigen Größen herzustellen. Danach plant er die Berechnung in der Engine. Anstatt sofort alles neu zu rechnen, bündelt er Änderungen und startet die Simulation im nächsten Animationsframe. Dadurch bleibt die Darstellung flüssig, auch wenn viele Werte schnell hintereinander verändert werden.
+
+Der Director sorgt außerdem dafür, dass alle relevanten Ereignisse über den Event Bus verbreitet werden. Dazu gehören die Meldung über den aktuellen Parameterzustand, der Status der Engine und die neuen Zeitreihen der Simulation. Präsentationsmodule wie Chart, KPI Karten oder Zustandsvektorrad hören diese Ereignisse mit und passen sich automatisch an. Fehlerhafte Eingaben oder zu große Abweichungen werden ebenfalls erkannt und als Fehlermeldung ausgegeben.
+
+Besonders nützlich ist die Möglichkeit, den Integrator während des Betriebs zu wechseln. Der Director kann zwischen Euler, Heun und Runge Kutta umschalten, ohne dass die Anwendung neu gestartet werden muss. Die Simulation wird sofort mit den gleichen Parametern neu berechnet, nur mit einem anderen Verfahren.
+
+Der Director erfüllt damit eine Schlüsselrolle im ESM Schema. ESM bedeutet EcmaScript Modules und beschreibt die Art, wie Module importiert und verbunden werden. Innerhalb dieses Systems ist der Director das Bindeglied zwischen Eingabe, Parameterprüfung, Berechnung und Ausgabeschicht. Er stellt sicher, dass Änderungen an einer Stelle zuverlässig durch die gesamte Engine laufen.
+
+Damit bleibt der Director das Herzstück der Koordination. Er hält den Ablauf stabil, sorgt für konsistente Daten und ermöglicht, dass die Simulation jederzeit reaktiv und nachvollziehbar bleibt.

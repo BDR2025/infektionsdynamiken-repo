@@ -1,0 +1,9 @@
+Der Event-Bus im Detail
+
+Der Event-Bus verbindet alle Teile der UID-Explore Engine miteinander. Er sorgt dafür, dass Änderungen an Parametern, Berechnungen oder Ansichten nicht direkt, sondern über klar definierte Signale weitergegeben werden. Dadurch bleiben die einzelnen Module unabhängig voneinander und können flexibel kombiniert werden.
+
+Sobald ein Nutzer einen Regler bewegt oder eine Einstellung ändert, sendet das System ein Ereignis über den Bus. Der Director nimmt dieses Ereignis auf, passt die Parameter an und startet die Berechnung. Anschließend werden die neuen Ergebnisse wieder als Ereignisse verschickt. Präsentationsmodule wie Chart, KPI oder Zustandsvektorrad hören mit und aktualisieren sich automatisch.
+
+Ein besonderer Vorteil des Event-Bus ist die Transparenz. Alle wichtigen Signale werden zusätzlich als CustomEvents in den DOM gespiegelt. So können Entwickler sie leicht beobachten oder zu Debugging-Zwecken nutzen. Gleichzeitig wird vermieden, dass Module sich gegenseitig blockieren oder unkontrolliert aufeinander zugreifen.
+
+Der Bus ist damit die Kommunikationsschicht der Engine. Er hält den Datenfluss klar, vermeidet enge Kopplungen und sorgt dafür, dass Eingaben, Berechnungen und Darstellungen jederzeit synchron bleiben.

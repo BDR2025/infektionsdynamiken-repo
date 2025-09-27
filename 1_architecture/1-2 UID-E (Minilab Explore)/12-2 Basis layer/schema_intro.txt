@@ -1,0 +1,11 @@
+schema.js im Detail
+
+schema.js liefert die Grundlage für alle Parameter der UID Explore Engine. Die Datei enthält den Katalog mit erlaubten Werten und sorgt dafür, dass Eingaben immer gültig bleiben. Sie normalisiert die Parameter, klemmt sie auf sinnvolle Grenzen und legt die Schrittweiten für die Bedienung fest. Zusätzlich stellt sie die algebraischen Kopplungen her, damit verbundene Größen automatisch konsistent bleiben. Beispiele dafür sind die Beziehungen zwischen R null, Beta und Gamma oder zwischen Gamma und der infektiösen Dauer.
+
+Immer wenn ein Nutzer einen Regler bewegt oder eine Eingabe macht, werden die Werte über schema.js geprüft und angepasst. Dabei greift das System auf den Katalog zurück, setzt Defaults wenn nötig und überträgt die Änderungen an den Director. Auf diese Weise erhält die Engine nur saubere und konsistente Parameter. Das verhindert Fehlberechnungen und sorgt dafür, dass jede Simulation stabil läuft.
+
+Besonders wichtig ist die Kopplungslogik. Wenn ein Wert geändert wird, zieht schema.js automatisch die abhängigen Größen nach. Dadurch entstehen keine Widersprüche und alle Parameter bleiben im Gleichgewicht. Dieser Schritt geschieht ohne dass die Nutzer es merken, wirkt aber direkt auf die Genauigkeit der Berechnungen.
+
+schema.js spielt damit eine zentrale Rolle im ESM Schema. ESM steht für EcmaScript Modules und bezeichnet die Struktur, in der Module importiert und exportiert werden. Innerhalb dieses Systems bildet schema.js die Schicht für gültige Parameter und macht die Schnittstellen der Engine verlässlich. Es verbindet Eingaben aus der Oberfläche mit den numerischen Modellen und sorgt dafür, dass der gesamte Ablauf konsistent bleibt.
+
+Damit schafft schema.js die notwendige Stabilität im Fundament der Engine. Jede Eingabe wird geprüft, angepasst und gekoppelt, bevor sie an die Berechnung weitergegeben wird. Auf diese Weise können Lernende und Lehrende sicher sein, dass die Ergebnisse jederzeit plausibel und nachvollziehbar sind.
