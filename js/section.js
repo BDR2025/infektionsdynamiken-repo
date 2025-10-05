@@ -2,317 +2,248 @@
   'use strict';
 
   const MANIFEST_URL = 'api/manifest.json';
-  const tree  = document.getElementById('tree');
-  const body  = document.getElementById('previewBody');
-  const title = document.getElementById('previewTitle');
-  const dl    = document.getElementById('downloadBtn');
-  const printBtn = document.getElementById('printBtn');
-  const ALLOWED = (window.ALLOWED_ROOT || '').replace(/\/+$/,'');
+  const ALLOWED = (window.ALLOWED_ROOT || '').replace(/\/+$/, '');
 
-  const expandBtn = document.getElementById('expandAll');
-  const collapseBtn = document.getElementById('collapseAll');
-  expandBtn?.addEventListener('click', () => tree.querySelectorAll('details').forEach(d=>d.open=true));
-  collapseBtn?.addEventListener('click', () => tree.querySelectorAll('details').forEach(d=>d.open=false));
+  // UI
+  const tree       = document.getElementById('tree');
+  const body       = document.getElementById('previewBody');
+  const title      = document.getElementById('previewTitle');
+  const dl         = document.getElementById('downloadBtn');
+  const printBtn   = document.getElementById('printBtn');
+  document.getElementById('expandAll')?.addEventListener('click', () => tree.querySelectorAll('details').forEach(d=>d.open=true));
+  document.getElementById('collapseAll')?.addEventListener('click', () => tree.querySelectorAll('details').forEach(d=>d.open=false));
 
-  function escapeHtml(s){ return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-  function ext(path){ const m=/\.([a-z0-9]+)(?:$|\?)/i.exec(path); return m?m[1].toLowerCase():''; }
-  function isImage(e){ return ['png','jpg','jpeg','gif','webp','avif','svg'].includes(e); }
-  function isPdf(e){ return e==='pdf'; }
-  function isBinaryLikely(e){ return ['zip','7z','rar','bin','exe','dll','wasm'].includes(e); }
+  // Utils
+  const PRE_STYLE  = 'white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;max-width:100%;box-sizing:border-box;margin:0';
+  const CODE_STYLE = 'display:block;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.95rem;line-height:1.4;white-space:inherit;overflow-wrap:inherit;word-break:inherit';
 
-  // Text-Preview: harte Umbrüche (inline, damit es sicher greift)
-  const PRE_STYLE = [
-    'white-space: pre-wrap',
-    'overflow-wrap: anywhere',
-    'word-break: break-word',
-    'max-width: 100%',
-    'box-sizing: border-box',
-    'margin: 0'
-  ].join(';');
-  const CODE_STYLE = [
-    'display: block',
-    'font-family: ui-monospace, Menlo, Consolas, monospace',
-    'font-size: 0.95rem',
-    'line-height: 1.4',
-    'white-space: inherit',
-    'overflow-wrap: inherit',
-    'word-break: inherit'
-  ].join(';');
+  const escapeHtml = s => s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const ext        = p => { const m=/\.([a-z0-9]+)(?:$|\?)/i.exec(p||''); return m?m[1].toLowerCase():''; };
+  const isImg      = e => ['png','jpg','jpeg','gif','webp','avif','svg'].includes(e);
+  const isPdf      = e => e==='pdf';
+  const isBin      = e => ['zip','7z','rar','bin','exe','dll','wasm'].includes(e);
 
-  // Externe Links: im neuen Tab öffnen (true) oder im gleichen Tab (false)
-  const OPEN_EXTERNAL_IN_NEW_TAB = false;
-  const LINK_ATTRS = OPEN_EXTERNAL_IN_NEW_TAB ? ' target="_blank" rel="noopener noreferrer"' : '';
-
-  // --- Linkify: URLs & repo-relative Pfade klickbar machen (sicher) ---
-  function linkifySafe(raw) {
-    // 1) http(s)://… URLs
-    const urlRe  = /(https?:\/\/[^\s<>'"]+)/g;
-    // 2) nackte Domain → https://… (Whitelist erweiterbar)
-    const bareRe = /(?:^|\s)(repository\.infektionsdynamiken\.de\/[^\s<>'"]+)/g;
-    // 3) repo-relative Pfade (Dateien) → interne Preview-Links
-    const relRe  = /(^|[\s])((?:\.?\/)?(?:[\w\-\/]+)\.(?:txt|md|markdown|rtf|html|json|js|css|pdf|png|jpg|jpeg|gif|webp|svg))/gi;
-
-    // Erst: http(s)://… matchen und Rest sicher escapen
-    let out = '';
-    let last = 0;
-    const pushEsc = (s) => { out += escapeHtml(s); };
-
-    raw.replace(urlRe, (m, _url, idx) => {
-      pushEsc(raw.slice(last, idx));
-      out += `<a href="${m}"${LINK_ATTRS}>${escapeHtml(m)}</a>`;
-      last = idx + m.length;
-      return m;
-    });
-    pushEsc(raw.slice(last));
-
-    // Danach nackte Domains
-    out = out.replace(bareRe, (full, dom) => {
-      const url = `https://${dom}`;
-      return full.replace(dom, `<a href="${url}"${LINK_ATTRS}>${escapeHtml(dom)}</a>`);
-    });
-
-    // Zum Schluss repo-relative Pfade → interne Preview (immer im Pane)
-    out = out.replace(relRe, (full, lead, rel) => {
-      const trimmed = rel.replace(/^\.\/+/, '');
-      return `${lead}<a href="#" data-preview="${escapeHtml(trimmed)}" title="In der Preview öffnen">${escapeHtml(rel)}</a>`;
-    });
-
-    return out;
-  }
-
-  // README-Handhabung
-  const README_REGEX = /^readme\.(?:md|markdown|txt|rtf|html)$/i;
-  const README_CANDIDATES = ['README.md','README.markdown','README.txt','README.rtf','README.html'];
-
-  // Manifest + Index: virtPath -> { url, origin, ... }
+  // Manifest-Index: virt -> node {url, origin, ...}
   let MAN = null;
   let TREE_ROOT = {};
   const URL_INDEX = new Map();
 
-  function getSubtreeByPath(rootObj, relPath){
-    if(!relPath) return rootObj;
-    const parts = relPath.split('/').filter(Boolean);
-    let node = rootObj;
-    for(const p of parts){
-      if(!node || typeof node !== 'object') return null;
-      node = node[p];
-    }
-    return node;
-  }
-
-  function findReadmePathForChildren(nodePath, childrenObj){
-    if(!childrenObj || typeof childrenObj !== 'object') return null;
-    for(const cand of README_CANDIDATES){
-      if(childrenObj[cand] && childrenObj[cand].__type === 'file'){
-        return (nodePath ? nodePath + '/' : '') + cand;
-      }
-    }
-    for(const name of Object.keys(childrenObj)){
-      if(README_REGEX.test(name) && childrenObj[name]?.__type === 'file'){
-        return (nodePath ? nodePath + '/' : '') + name;
-      }
-    }
-    return null;
-  }
-
-  function clearAllActiveStates(){
-    document.querySelectorAll('.tree a').forEach(a => a.classList.remove('file-active'));
-    document.querySelectorAll('.tree summary').forEach(s => s.classList.remove('folder-active'));
-  }
-  function clearFileActiveStates(){
-    document.querySelectorAll('.tree a').forEach(a => a.classList.remove('file-active'));
-  }
-
-  function markActiveFolder(path){
-    clearAllActiveStates();
-    const sum = Array.from(document.querySelectorAll('.tree summary'))
-      .find(s => s.dataset.path === path);
-    if(sum){
-      sum.classList.add('folder-active');
-      const det = sum.parentElement;
-      if(det && det.tagName === 'DETAILS') det.open = true;
-      sum.scrollIntoView({block:'nearest'});
-    }
-  }
-
-  function markActiveLink(path){
-    clearFileActiveStates();
-    const link = Array.from(document.querySelectorAll('.tree a'))
-      .find(a => a.getAttribute('href') === path);
-    if(link){
-      link.classList.add('file-active');
-      let p = link.parentElement;
-      while(p){
-        if(p.tagName === 'DETAILS'){ p.open = true; }
-        p = p.parentElement;
-      }
-      link.scrollIntoView({block:'nearest'});
-    }
-  }
-
-  function tryAutoLoadReadmeForPath(dirPathRel){
-    const base = ALLOWED ? ALLOWED : '';
-    const relUnderAllowed = dirPathRel.startsWith(base) ? dirPathRel.slice(base.length).replace(/^\/+/,'') : dirPathRel;
-    const subtree = getSubtreeByPath(TREE_ROOT, relUnderAllowed);
-    if(!subtree) return false;
-
-    const readmeFullPath = findReadmePathForChildren(dirPathRel, subtree);
-    if(readmeFullPath){
-      openPreview(readmeFullPath);
-      markActiveFolder(dirPathRel);
-      return true;
-    }
-    markActiveFolder(dirPathRel);
-    return false;
-  }
-
-  // -------- Manifest-Index bauen: virtPfad -> Node (mit url/origin) --------
   function indexSubtree(obj, prefix){
-    Object.keys(obj || {}).forEach(name => {
+    Object.keys(obj||{}).forEach(name=>{
       const node = obj[name];
       const full = prefix ? `${prefix}/${name}` : name;
-      if(node && node.__type === 'file'){
-        URL_INDEX.set(full, node); // node.url vorhanden für Engine-Dateien
-      }else if(node && typeof node === 'object'){
-        indexSubtree(node, full);
-      }
+      if(node && node.__type==='file') URL_INDEX.set(full, node);
+      else if(node && typeof node==='object') indexSubtree(node, full);
     });
   }
-  function urlFor(path){
-    const meta = URL_INDEX.get(path);
-    return (meta && meta.url) ? meta.url : path; // Repo-Dateien weiter lokal ausliefern
+  const urlFor = (virt) => {
+    const meta = URL_INDEX.get(virt);
+    return (meta && meta.url) ? meta.url : virt; // Repo-Dateien lokal, Engine-Dateien via CDN
+  };
+
+  // Pfad-Resolver (für ModuleMap/Kurzpfade)
+  function normalize(parts){
+    const out=[];
+    for(const p of parts){
+      if(!p || p=='.') continue;
+      if(p==='..') out.pop(); else out.push(p);
+    }
+    return out;
+  }
+  function resolveTokenToVirtPath(token, currentVirt){
+    // absolute Engine-Kanonik: /uid-e_v1/...  (inkl. /uid/ -> map)
+    if(/^\/uid(?:-e_v1)?\//i.test(token)){
+      token = token.replace(/^\/uid\//i, '/uid-e_v1/');           // Alias akzeptieren
+      // Anker: alles bis zum /uid-e_v1/ der aktuellen Datei
+      const idx = currentVirt.toLowerCase().indexOf('/uid-e_v1/');
+      if(idx===-1) return null;
+      const prefix = currentVirt.slice(0, idx+('/uid-e_v1').length); // z.B. ".../1-2 UID e-minilab-explorer/uid-e_v1"
+      const rest   = token.replace(/^\/uid-e_v1\/?/i,'');
+      return (prefix + '/' + rest).replace(/^\/+/,'');
+    }
+    // absolute Repo: /1_architecture/...
+    if(/^\/1_architecture\//i.test(token)){
+      return token.replace(/^\/+/,'');
+    }
+    // absolute (andere) – als Repo-virt interpretieren
+    if(token.startsWith('/')){
+      return token.replace(/^\/+/,'');
+    }
+    // relativ: bezogen auf Verzeichnis der aktuellen Datei
+    const baseParts = currentVirt.split('/'); baseParts.pop();
+    const relParts  = token.split('/');
+    return normalize([...baseParts, ...relParts]).join('/');
   }
 
-  // ---------------- Tree-Rendering ----------------
+  // Linkify + Kopfzeile „* File:“ + ModuleMap
+  function renderAnnotated(text, currentVirt, thisLiveURL){
+    const lines = text.split(/\r?\n/);
+    // Engine-Anker (Präfix bis /uid-e_v1)
+    const engineIdx = currentVirt.toLowerCase().indexOf('/uid-e_v1/');
+    const enginePrefix = engineIdx>=0 ? currentVirt.slice(0, engineIdx+('/uid-e_v1').length) : null;
+
+    const tokenRe = /((?:\.\.?\/)?(?:[\w\-().]+\/)*[\w\-().]+\.(?:js|css|mjs|json|md|markdown|txt|html|pdf|png|jpg|jpeg|gif|webp|svg))/g;
+
+    let html = '';
+    for(const raw of lines){
+      // 1) * File: …  -> anklickbar (öffnet die Live-Datei)
+      const mFile = raw.match(/^\s*\*\s*File:\s*(\S+)/i);
+      if(mFile){
+        const shown = mFile[1].replace(/^\/uid\//i, '/uid-e_v1/'); // Alias zeigen wie Kanon
+        const left  = escapeHtml(raw.slice(0, mFile.index)) + escapeHtml(raw.slice(mFile.index, mFile.index + mFile[0].length - mFile[1].length));
+        const link  = `<a href="${thisLiveURL}" target="_blank" rel="noopener noreferrer">${escapeHtml(shown)}</a>`;
+        html += left + link + '\n';
+        continue;
+      }
+
+      // 2) sonst: linkify Tokens (relativ/absolut) → Preview-Links
+      let esc = escapeHtml(raw);
+      esc = esc.replace(tokenRe, (_m)=>{
+        const token = _m;            // bereits „esc“ – hier ok, weil RegEx nur ASCII-Symbole nutzt
+        const data  = token;         // roher Text (rel/abs)
+        return `<a href="#" data-token="${escapeHtml(data)}" title="In der Vorschau öffnen">${escapeHtml(token)}</a>`;
+      });
+
+      // 3) http(s):// URLs klickbar (extern)
+      esc = esc.replace(/(https?:\/\/[^\s<>'"]+)/g, (m)=>{
+        return `<a href="${m}" target="_blank" rel="noopener noreferrer">${escapeHtml(m)}</a>`;
+      });
+
+      html += esc + '\n';
+    }
+
+    // Delegiertes Klicken: data-token → virtuellen Pfad auflösen → Preview öffnen
+    requestAnimationFrame(()=>{
+      body.querySelectorAll('a[data-token]').forEach(a=>{
+        a.addEventListener('click', (e)=>{
+          e.preventDefault();
+          const token = a.getAttribute('data-token');
+          const virt  = resolveTokenToVirtPath(token, currentVirt);
+          if(virt){ setHashPath(virt); openPreview(virt); }
+        });
+      });
+    });
+
+    return html;
+  }
+
+  // Tree
   function buildTree(subtree){
-    tree.textContent = '';
+    tree.textContent='';
     const root = document.createElement('details');
+    root.open = true;
     const sum = document.createElement('summary');
     sum.textContent = ALLOWED || 'repo';
     sum.dataset.path = ALLOWED || '';
-    root.open = true;
     root.appendChild(sum);
     tree.appendChild(root);
 
-    function addNodes(parent, nodePath, children){
-      Object.keys(children).sort().forEach(name => {
+    const add = (parent, nodePath, children)=>{
+      Object.keys(children).sort().forEach(name=>{
         const node = children[name];
         const full = (nodePath ? nodePath + '/' : '') + name;
 
-        // README.* NICHT im Tree anzeigen (wir laden es automatisch in der Preview)
-        if (node && node.__type === 'file' && README_REGEX.test(name)) return;
-
-        if(node && node.__type === 'file'){
-          const div = document.createElement('div');
-          div.className = 'file';
-          const a = document.createElement('a');
-          a.textContent = name;
-          // HREF bleibt der virtuelle Pfad (Deep-Link via #preview)
-          a.href = full;
-          a.addEventListener('click', e => { e.preventDefault(); setHashPath(full); openPreview(full); });
-          div.appendChild(a);
-          parent.appendChild(div);
+        if(node && node.__type==='file'){
+          const div = document.createElement('div'); div.className='file';
+          const a = document.createElement('a'); a.textContent=name; a.href=full;
+          a.addEventListener('click', e=>{ e.preventDefault(); setHashPath(full); openPreview(full); });
+          div.appendChild(a); parent.appendChild(div);
         }else{
-          const det = document.createElement('details');
-          const sm = document.createElement('summary');
-          sm.textContent = name;
-          sm.dataset.path = full;
-          sm.addEventListener('click', () => {
-            setTimeout(() => { if (det.open) tryAutoLoadReadmeForPath(full); }, 0);
-          });
-          det.appendChild(sm);
-          parent.appendChild(det);
-          addNodes(det, full, node);
+          const det = document.createElement('details'); const sm=document.createElement('summary');
+          sm.textContent = name; sm.dataset.path=full;
+          det.appendChild(sm); parent.appendChild(det);
+          add(det, full, node);
         }
       });
-    }
-    addNodes(root, ALLOWED, subtree);
+    };
+    add(root, ALLOWED, subtree);
   }
 
-  // ---------------- Preview ----------------
-  async function openPreview(path){
-    title.textContent = 'Lädt…';
-    body.textContent = 'Bitte warten…';
+  // Preview
+  function markActive(path){
+    document.querySelectorAll('.tree a').forEach(a=>a.classList.toggle('file-active', a.getAttribute('href')===path));
+    // Ordner aufklappen
+    let p = path.split('/'); p.pop();
+    const folder = p.join('/');
+    Array.from(document.querySelectorAll('.tree summary')).forEach(s=>{
+      if(s.dataset.path && folder.startsWith(s.dataset.path)) s.parentElement.open = true;
+    });
+  }
 
-    const e = ext(path);
-    const effectiveURL = urlFor(path);   // <— Kern: CDN-URL aus Manifest nutzen, wenn vorhanden
-    dl.setAttribute('href', effectiveURL);
+  async function openPreview(pathVirt){
+    title.textContent = 'Lädt…'; body.textContent = 'Bitte warten…';
+    const e = ext(pathVirt);
+    const liveURL = urlFor(pathVirt);  // Kern: Engine → CDN, Repo → lokal
+    dl.setAttribute('href', liveURL);
 
     try{
-      if(isImage(e)){
-        title.textContent = path;
-        body.innerHTML = '<img alt="Vorschau" style="max-width:100%;height:auto" src="'+effectiveURL+'">';
-        markActiveLink(path); return;
+      if(isImg(e)){
+        title.textContent = pathVirt;
+        body.innerHTML = `<img alt="Vorschau" style="max-width:100%;height:auto" src="${liveURL}">`;
+        markActive(pathVirt); return;
       }
       if(isPdf(e)){
-        title.textContent = path;
-        body.innerHTML = '<object data="'+effectiveURL+'" type="application/pdf" width="100%" height="600">PDF kann nicht eingebettet werden. <a href="'+effectiveURL+'" target="_blank" rel="noopener">Im neuen Tab öffnen</a>.</object>';
-        markActiveLink(path); return;
+        title.textContent = pathVirt;
+        body.innerHTML = `<object data="${liveURL}" type="application/pdf" width="100%" height="600">PDF nicht einbettbar. <a href="${liveURL}" target="_blank" rel="noopener">Öffnen</a>.</object>`;
+        markActive(pathVirt); return;
       }
-      if(isBinaryLikely(e)){
-        title.textContent = path;
-        body.innerHTML = '<p>Nicht darstellbarer Dateityp. Bitte über den Download-Button laden.</p>';
-        markActiveLink(path); return;
+      if(isBin(e)){
+        title.textContent = pathVirt;
+        body.innerHTML = `<p>Nicht darstellbarer Dateityp. Bitte über „Download“ laden.</p>`;
+        markActive(pathVirt); return;
       }
 
-      const resp = await fetch(effectiveURL, {cache:'no-cache'});
+      const resp = await fetch(liveURL, {cache:'no-cache'});
       if(!resp.ok){ title.textContent='Fehler'; body.textContent='Datei nicht gefunden oder nicht lesbar.'; return; }
       const text = await resp.text();
-      title.textContent = path;
-      body.innerHTML = '<pre class="readme" style="'+PRE_STYLE+'"><code style="'+CODE_STYLE+'">'+linkifySafe(text)+'</code></pre>';
-      markActiveLink(path);
+      title.textContent = pathVirt;
+      const html = renderAnnotated(text, pathVirt, liveURL);
+      body.innerHTML = `<pre class="readme" style="${PRE_STYLE}"><code style="${CODE_STYLE}">${html}</code></pre>`;
+      markActive(pathVirt);
     }catch(err){
-      title.textContent = 'Fehler';
-      body.textContent = 'Beim Laden ist ein Fehler aufgetreten.';
+      title.textContent='Fehler';
+      body.textContent='Beim Laden ist ein Fehler aufgetreten.';
       console.error(err);
     }
   }
 
-  function getHashPath(){ const h=location.hash||''; const m=h.match(/[#&]preview=([^&]+)/); return m?decodeURIComponent(m[1]):null; }
-  function setHashPath(p){
+  // Hash-Deep-Link
+  const getHashPath = () => { const m=(location.hash||'').match(/[#&]preview=([^&]+)/); return m?decodeURIComponent(m[1]):null; };
+  const setHashPath = (p) => {
     const enc = encodeURIComponent(p);
-    if(location.hash.includes('preview=')){
-      location.hash = location.hash.replace(/preview=[^&]*/, 'preview='+enc);
-    }else{
-      location.hash = (location.hash ? location.hash + '&' : '#') + 'preview='+enc;
-    }
-  }
+    if(location.hash.includes('preview=')) location.hash = location.hash.replace(/preview=[^&]*/, 'preview='+enc);
+    else location.hash = (location.hash ? location.hash + '&' : '#') + 'preview='+enc;
+  };
 
-  // Delegiertes Klicken für interne Preview-Links aus linkifySafe()
-  document.addEventListener('click', (e) => {
+  // Delegation (nur für linkify aus „renderAnnotated“, siehe oben)
+  document.addEventListener('click', (e)=>{
     const a = e.target.closest('a[data-preview]');
-    if (!a) return;
+    if(!a) return;
     e.preventDefault();
-    const p = a.getAttribute('data-preview');
-    if (p) { setHashPath(p); openPreview(p); }
+    const token = a.getAttribute('data-preview');
+    const virt  = resolveTokenToVirtPath(token, getHashPath() || '');
+    if(virt){ setHashPath(virt); openPreview(virt); }
   });
 
-  // Drucken
-  printBtn?.addEventListener('click', ()=> window.print());
-
-  // Hash-Änderungen (Deep-Link)
-  window.addEventListener('hashchange', ()=>{ const p=getHashPath(); if(p) openPreview(p); });
+  printBtn?.addEventListener('click', ()=>window.print());
 
   // Boot
   async function boot(){
     try{
-      const resp = await fetch(MANIFEST_URL + `?v=${Date.now()}`, {cache:'no-cache'});
-      if(!resp.ok) throw new Error('Manifest nicht gefunden');
-      MAN = await resp.json();
-
-      // Teilbaum & Index
+      const r = await fetch(MANIFEST_URL+`?v=${Date.now()}`, {cache:'no-cache'});
+      if(!r.ok) throw new Error('manifest.json nicht gefunden');
+      MAN = await r.json();
       TREE_ROOT = (MAN.tree && MAN.tree[ALLOWED]) ? MAN.tree[ALLOWED] : {};
       indexSubtree(TREE_ROOT, ALLOWED);
       buildTree(TREE_ROOT);
-
       const p = getHashPath();
-      if(p){ openPreview(p); }
-      else { tryAutoLoadReadmeForPath(ALLOWED); }
+      if(p) openPreview(p);
     }catch(e){
-      tree.textContent = 'Manifest konnte nicht geladen werden. Bitte GitHub Action aktivieren oder manifest.json bereitstellen.';
+      tree.textContent = 'Manifest konnte nicht geladen werden.';
       console.error(e);
     }
   }
   window.addEventListener('DOMContentLoaded', boot);
 })();
+
 
