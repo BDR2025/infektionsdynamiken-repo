@@ -1,0 +1,26 @@
+{
+  "virtual_root": "sd_repo",
+  "include_top": [],
+  "auto_top_regex": "^\\d+[_ -].*$",
+
+  "overlay_rules": [
+    {
+      "virtual_prefix": "1_architecture/1-2 UID-E (Minilab Explore)",
+      "source_prefix": "sd_engine",
+      "carry_suffix": true,
+      "origin_label": "engine"
+    },
+    {
+      "virtual_prefix": "1_architecture/1-2 UID-E",
+      "source_prefix": "sd_engine",
+      "carry_suffix": true,
+      "origin_label": "engine"
+    }
+  ],
+
+  "repo_base_url": "https://repository.infektionsdynamiken.de",
+  "engine_cdn_base": "https://cdn.jsdelivr.net/gh/infektionsdynamiken/infektionsdynamiken-engine@main",
+
+  "exclude_dirs": [".git", ".github", "api"],
+  "exclude_globs": ["**/node_modules/**", "**/.git/**", "**/.DS_Store"]
+}
