@@ -18,18 +18,16 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout sd_repo (dieses Repo)
+      - name: Checkout this repo (repository site)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           persist-credentials: true
-          path: .
 
-      - name: Checkout sd_engine (zweites Repo)
+      - name: Checkout engine repo (overlay source)
         uses: actions/checkout@v4
         with:
-          # 👉 Falls euer Org/Repo abweicht, Repo-Variable ENGINE_REPO_FULL setzen (z.B. "ORG/REPO").
-          repository: ${{ vars.ENGINE_REPO_FULL || 'infektionsdynamiken/infektionsdynamiken-engine' }}
+          repository: infektionsdynamiken/infektionsdynamiken-engine
           fetch-depth: 0
           path: sd_engine
 
@@ -38,15 +36,14 @@ jobs:
         with:
           python-version: '3.x'
 
-      - name: Debug workspace (kurz)
+      - name: Debug workspace (short)
         run: |
           echo "Branch=${{ github.ref_name }}"
           echo "PWD=$(pwd)"
           find . -maxdepth 2 -type d | sort || true
 
-      - name: Generate manifest (Overlay: sd_repo + sd_engine→1-2 UID-E)
+      - name: Generate manifest (overlay engine → 1-2 UID-E)
         env:
-          # leer lassen => Top-Level-Verzeichnisse werden automatisch erkannt
           INCLUDED_ROOTS: ""
         run: |
           python3 scripts/gen_manifest.py
@@ -88,5 +85,6 @@ jobs:
             fi
             sleep 2
           done
+
 
 
