@@ -1,0 +1,236 @@
+@charset "UTF-8";
+/* Infektionsdynamiken.de / infectiondynamics.eu · coach-video.css
+   Author: B. D. Rausch
+   License: CC BY 4.0
+   Version: v2.0.0 (restructured)
+   Created: 2025-09-11
+   Last Review: 2025-09-18
+   Last Change: 2025-09-18
+
+   Purpose:
+   Video-Coach Styles. Oben: Core (Trigger, Backdrop, Dock, Media, Transcript,
+   Breakpoints, Avatar-Kontext). Unten: LEGACY Block mit Steuer-UI (Peek/Toggle,
+   Inline-Chevron, Head-Buttons, native-Control-Hacks) – später aus JS/CSS
+   entfernbar.
+*/
+
+@layer features {
+
+  /* ========= 1) Coach Trigger Chips (optional Core) ================= */
+  .coach-chip{
+    --chip-pad: 6px 10px;
+    --chip-gap: 8px;
+    --chip-font: 600 .95rem/1.2 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif;
+    display:inline-flex; align-items:center; gap:var(--chip-gap);
+    padding:var(--chip-pad);
+    border:1px solid var(--border);
+    border-radius:999px;
+    background: var(--panel);
+    color: var(--ink);
+    font: var(--chip-font);
+    cursor:pointer;
+    transition: transform .06s ease, border-color .18s ease, background .18s ease, box-shadow .18s ease;
+  }
+  .coach-chip:hover{ background: var(--pill); }
+  .coach-chip:active{ transform: translateY(1px); }
+  .coach-chip:focus-visible{ outline: var(--focus); outline-offset:3px; }
+  .coach-chip::before{
+    content:""; width:28px; height:28px; flex:0 0 28px; border-radius:999px;
+    background: center/cover no-repeat var(--panel-2);
+    box-shadow: 0 0 0 1px var(--border), 0 6px 14px rgba(0,0,0,.10);
+  }
+  .coach-chip > strong{ font-weight:700; letter-spacing:.01em; }
+  .coach-chip.sm{ --chip-pad: 4px 8px; --chip-gap:6px; font-size:.9rem; }
+  .coach-chip.lg{ --chip-pad: 8px 12px; --chip-gap:10px; }
+  .coach-chip.lg::before{ width:32px; height:32px; flex-basis:32px; }
+
+  /* Coach-Avatare per data-coach */
+  .coach-chip[data-coach="archer"]::before{ background-image: var(--coach-img, url("../media/archer-small.png")); }
+  .coach-chip[data-coach="mila"]::before  { background-image: var(--coach-img, url("../media/mila-small.png")); }
+  .coach-chip[data-coach="chloe"]::before { background-image: var(--coach-img, url("../media/chloe-small.png")); }
+  .coach-chip[data-coach="ben"]::before   { background-image: var(--coach-img, url("../media/ben-small.png")); }
+
+  /* ========= 2) Backdrop =========================================== */
+  .coach-backdrop{
+    position: fixed; inset: 0; z-index: 69;
+    background: rgba(6,12,20,.45);
+    backdrop-filter: none;
+    opacity: 0; pointer-events: none; transition: opacity .2s ease;
+  }
+  html[data-mode="school"] .coach-backdrop{ background: rgba(6,12,20,.35); }
+  html.coach-open .coach-backdrop[aria-hidden="false"]{ opacity:1; pointer-events:auto; }
+
+  /* ========= 3) Dock (Overlay) ===================================== */
+  .coach-dock{
+    position: fixed; left: 12px; top: calc(var(--header-h, 56px) + 12px); z-index: 70;
+    width: var(--coach-dock-w, 440px);
+    background: color-mix(in srgb, var(--panel) 88%, transparent);
+    border: 1px solid color-mix(in srgb, var(--border), transparent 10%);
+    border-radius: 16px;
+    box-shadow: var(--shadow-2);
+    padding: 14px;
+
+    opacity: 0; transform: translateX(-24px);
+    pointer-events: none;
+    transition: transform .32s cubic-bezier(.22,.61,.36,1), opacity .24s ease;
+  }
+  html.coach-open .coach-dock[aria-hidden="false"]{ opacity:1; transform: translateX(0); pointer-events:auto; }
+
+  /* ========= 4) Body / Media / Transcript ========================== */
+  .coach-body{ display:block; }
+  .coach-media{
+    display:block; width:100%; border-radius:12px;
+    background: var(--panel); border:1px solid var(--border);
+    box-shadow: 0 6px 20px rgba(0,0,0,.12);
+  }
+  #coachVideo.coach-media{ display:block; max-width:100%; height:auto; }
+
+  .coach-transcript{
+    margin-top:12px; border:1px solid var(--border);
+    background: color-mix(in srgb, var(--panel), var(--bg) 6%);
+    border-radius:12px; overflow:hidden;
+  }
+  .coach-transcript > summary{ padding:10px 12px; cursor:pointer; list-style:none; }
+  .coach-transcript[open] > summary{ border-bottom:1px solid var(--border); }
+  .coach-transcript > div{ padding:12px; }
+
+  /* ========= 5) Breakpoints ======================================== */
+  @media (min-width:640px) and (max-width:959.98px){
+    .coach-dock{
+      left:50%; transform:translate(-50%, -8px);
+      top: calc(var(--header-h, 56px) + 16px);
+      width: min(92vw, 560px);
+      background: color-mix(in srgb, var(--panel) 88%, transparent);
+    }
+    html.coach-open .coach-dock[aria-hidden="false"]{ transform:translate(-50%, 0); }
+  }
+  @media (max-width:639.98px){
+    .coach-dock{
+      left:50%; bottom: 8px; top:auto;
+      width: min(92vw, 560px); transform:translate(-50%, 8px);
+      background: color-mix(in srgb, var(--panel) 88%, transparent);
+    }
+    html.coach-open .coach-dock[aria-hidden="false"]{ transform:translate(-50%, 0); }
+  }
+
+  /* ========= 6) Avatar-Kontext ===================================== */
+  :root{
+    --coach-img-ben:    url("../media/ben-small.png");
+    --coach-img-chloe:  url("../media/chloe-small.png");
+    --coach-img-mila:   url("../media/mila-small.png");
+    --coach-img-archer: url("../media/archer-small.png");
+  }
+  /* Defaults by context */
+  html[lang="de"][data-mode="school"]      { --coach-img: var(--coach-img-ben); }
+  html[lang="en"][data-mode="school"]      { --coach-img: var(--coach-img-chloe); }
+  html[lang="de"][data-mode="university"]  { --coach-img: var(--coach-img-mila); }
+  html[lang="en"][data-mode="university"]  { --coach-img: var(--coach-img-archer); }
+  /* Page-level override */
+  html[data-coach="ben"]    { --coach-img: var(--coach-img-ben); }
+  html[data-coach="chloe"]  { --coach-img: var(--coach-img-chloe); }
+  html[data-coach="mila"]   { --coach-img: var(--coach-img-mila); }
+  html[data-coach="archer"] { --coach-img: var(--coach-img-archer); }
+  /* Element-level override */
+  .hint-chip[data-coach="ben"],
+  .coach-coin[data-coach="ben"],
+  .coach-chip[data-coach="ben"],
+  .ct-ava[data-coach="ben"]     { --coach-img: var(--coach-img-ben); }
+  .hint-chip[data-coach="chloe"],
+  .coach-coin[data-coach="chloe"],
+  .coach-chip[data-coach="chloe"],
+  .ct-ava[data-coach="chloe"]   { --coach-img: var(--coach-img-chloe); }
+  .hint-chip[data-coach="mila"],
+  .coach-coin[data-coach="mila"],
+  .coach-chip[data-coach="mila"],
+  .ct-ava[data-coach="mila"]    { --coach-img: var(--coach-img-mila); }
+  .hint-chip[data-coach="archer"],
+  .coach-coin[data-coach="archer"],
+  .coach-chip[data-coach="archer"],
+  .ct-ava[data-coach="archer"]  { --coach-img: var(--coach-img-archer); }
+  /* Apply avatar */
+  .hint-chip .hc-ava,
+  .coach-coin,
+  .ct-ava, .ct-ava .ct-ava-fallback,
+  .coach-chip::before{
+    background-image: var(--coach-img);
+    background-position:center; background-repeat:no-repeat; background-size:cover;
+  }
+
+  /* ==================================================================
+     LEGACY — Steuer-UI (später entfernen, wenn JS bereinigt ist)
+     Enthält: Head-Buttons, native Control-Hacks, Peek/Toggle, Inline-Chevron
+  ================================================================== */
+
+  /* Head (Close/Icon) */
+  .coach-head{ position: relative; display:flex; align-items:center; justify-content:flex-end; gap:8px; margin-bottom:10px; }
+  .coach-head .icon-btn, .coach-head #coachClose{
+    width:36px; height:36px; display:grid; place-items:center;
+    border:1px solid var(--border); border-radius:999px; background: var(--panel);
+  }
+
+  /* Minimalist Mode / Native Controls */
+  #coachTitle, .coach-head, #coachClose{ display:none !important; }
+  #coachVideo::-webkit-media-controls-enclosure,
+  #coachVideo::-webkit-media-controls-panel,
+  #coachVideo::-webkit-media-controls,
+  #coachVideo::-webkit-media-controls-play-button,
+  #coachVideo::-webkit-media-controls-start-playback-button,
+  #coachVideo::-webkit-media-controls-timeline,
+  #coachVideo::-webkit-media-controls-volume-slider,
+  #coachVideo::-webkit-media-controls-mute-button,
+  #coachVideo::-webkit-media-controls-fullscreen-button { display:none !important; }
+  #coachVideo{ outline:none; }
+
+  /* Peek/Toggle Mechanik */
+  :root{
+    --coach-peek-x: 44px;
+    --coach-peek-y: 44px;
+    --coach-toggle-size: 40px;
+    --coach-toggle-gap: 8px;
+  }
+  html.coach-peek .coach-dock{ pointer-events:none; }
+  html.coach-peek.coach-orient-left   .coach-dock{ transform: translateX(calc(-100% + var(--coach-peek-x))) !important; }
+  html.coach-peek.coach-orient-top    .coach-dock{ transform: translate(-50%, calc(-100% + var(--coach-peek-y))) !important; }
+  html.coach-peek.coach-orient-bottom .coach-dock{ transform: translate(-50%, calc(100% - var(--coach-peek-y))) !important; }
+  .coach-toggle{
+    position: fixed; z-index: 72; display:none;
+    width: var(--coach-toggle-size); height: var(--coach-toggle-size);
+    border: 1px solid var(--border); border-radius: 999px;
+    background: color-mix(in srgb, var(--panel) 92%, transparent);
+    box-shadow: var(--shadow-2);
+    opacity: .88; cursor: pointer;
+    left: 0; top: 0;  /* JS setzt Position */
+    transition: opacity .15s ease, transform .15s ease;
+  }
+  html.coach-open .coach-toggle{ display: grid; place-items: center; }
+  .coach-toggle:hover{ opacity: 1; }
+  .coach-toggle svg{ width:18px; height:18px; transition: transform .2s ease; }
+  .coach-toggle svg{ transform: rotate(var(--arrow-rot, 0deg)); }
+  html.coach-orient-top    .coach-toggle svg{ --arrow-rot: -90deg; }
+  html.coach-orient-bottom .coach-toggle svg{ --arrow-rot:  90deg; }
+  html.coach-peek.coach-orient-left   .coach-toggle svg{ --arrow-rot: 180deg; }
+  html.coach-peek.coach-orient-top    .coach-toggle svg{ --arrow-rot:  90deg; }
+  html.coach-peek.coach-orient-bottom .coach-toggle svg{ --arrow-rot: -90deg; }
+  @media (max-width:639.98px){ .coach-toggle{ box-shadow: var(--shadow-1); } }
+
+  /* Inline Chevron Overlay */
+  html.coach-open:not(.coach-peek) .coach-inline-toggle{ display:grid; }
+  html.coach-peek .coach-inline-toggle{ display:none; }
+  .coach-inline-toggle{
+    position:absolute; right:12px; top:50%; transform:translateY(-50%);
+    width:40px; height:40px; border-radius:999px;
+    border:1px solid var(--border, rgba(0,0,0,.12));
+    background: color-mix(in srgb, var(--panel, #fff) 92%, transparent);
+    color: var(--ink, #111);
+    box-shadow: var(--shadow-2, 0 8px 20px rgba(0,0,0,.15));
+    place-items:center; cursor:pointer; opacity:.96; z-index:1;
+    transition: opacity .15s ease, transform .15s ease, box-shadow .15s ease;
+  }
+  .coach-inline-toggle:hover{ opacity:1; box-shadow: var(--shadow-3, 0 10px 26px rgba(0,0,0,.18)); }
+  .coach-inline-toggle:active{ transform: translateY(-50%) scale(.98); }
+  .coach-inline-toggle:focus-visible{ outline: var(--focus, 2px solid #1a73e8); outline-offset:3px; }
+  .coach-inline-toggle svg{ width:22px; height:22px; transform: rotate(var(--chev-rot, 0deg)); }
+  html.coach-orient-top    .coach-inline-toggle svg{ --chev-rot:-90deg; }
+  html.coach-orient-bottom .coach-inline-toggle svg{ --chev-rot: 90deg; }
+
+} /* @layer features */

@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="de" data-mode="school" data-page="repo" data-coach="ben">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Infektionsdynamiken – Repository (DE)</title>
+    <link rel="icon" href="favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="favicon-192.png">
+    <link rel="stylesheet" href="css/tokens.css" />
+    <link rel="stylesheet" href="css/base.css" />
+    <link rel="stylesheet" href="css/layout.css" />
+    <link rel="stylesheet" href="css/components.css" />
+    <link rel="stylesheet" href="css/patterns.css" />
+    <link rel="stylesheet" href="css/pages.css" />
+    <link rel="stylesheet" href="css/landing.css" />
+    <style>
+@media (max-width: 1000px){ .landing-header .nav-links{ display:none; } }
+.wordmark-short{ display:none; }
+@media (max-width:680px){ .wordmark-long{ display:none; } .wordmark-short{ display:block; } }
+@media (max-width:499.98px){ .wordmark-long,.wordmark-short{ display:none; } }
+.grid-2-2{ display:grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap:16px; }
+@media (max-width:720px){ .grid-2-2{ grid-template-columns: 1fr; } }
+    </style>
+  </head>
+  <body id="top" class="repo">
+    <!-- Header (Landing-Style, eingekürzt) -->
+    <header class="landing-header" role="banner">
+      <div class="container bar">
+        <a href="index.html" class="brand" aria-label="Infektionsdynamiken.de — Startseite">
+          <img class="brand-icon" src="assets/icons/logo-id.svg" alt="Infektionsdynamiken.de" />
+          <div class="wordmark wordmark-long">
+            <div class="brand-title">Infektionsdynamiken verstehen</div>
+            <div class="brand-claim">Repository · transparent &amp; zugänglich</div>
+          </div>
+          <div class="wordmark wordmark-short">
+            <div class="brand-title">Infektionsdynamiken.de</div>
+            <div class="brand-claim">Repository</div>
+          </div>
+        </a>
+        <nav class="landing-nav" aria-label="Hauptnavigation Repository">
+          <div class="nav-links">
+            <a href="architektur.html">Architektur</a>
+            <a href="publikationen.html">Publikationen</a>
+            <a href="lehre.html">Lehre</a>
+            <a href="https://infektionsdynamiken.de/#legal">Rechtliches</a>
+          </div>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section class="section container">
+        <article class="card pad">
+          <span class="eyebrow">Start</span>
+          <hr class="accent-line" />
+          <h1>Repository · Dispatcher</h1>
+          <p class="lead">Wähle einen Bereich:</p>
+          <div class="grid-2-2 mt-4">
+            <article class="card">
+              <h3>Systemarchitektur</h3>
+              <p>Intro (UID-I), Explore (UID-E), Challenge (UID-C), Module.</p>
+              <p><a class="btn" href="architektur.html">Öffnen</a></p>
+            </article>
+            <article class="card">
+              <h3>Publikationen</h3>
+              <p>Papers, Vorträge, Preprints.</p>
+              <p><a class="btn" href="publikationen.html">Öffnen</a></p>
+            </article>
+            <article class="card">
+              <h3>Lehre</h3>
+              <p>Unterlagen, Aufgaben, Bibliografie.</p>
+              <p><a class="btn" href="lehre.html">Öffnen</a></p>
+            </article>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <footer class="landing-footer">
+      <div class="container">
+        <p class="muted">© CC BY 4.0 · Infektionsdynamiken – Repository (Preview). Keine Cookies.</p>
+      </div>
+    </footer>
+  </body>
+</html>

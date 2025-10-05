@@ -1,0 +1,226 @@
+/* Infektionsdynamiken.de / infectiondynamics.eu · coach-text.css
+   Author: B. D. Rausch
+   License: CC BY 4.0
+   Version: v2.2.0
+   Created: 2025-09-11
+   Last Review: 2025-09-18
+   Last Change: 2025-09-18
+
+   Purpose:
+   Austauschbares Increment für Coach-Text Overlays (Dialoge mit Avatar).
+   - Autark (nutzt globale Tokens, fällt auf lokale --ct-* zurück)
+   - Enthält Fallbacks, Avatare, Case-Varianten, Bottom-Sheet für Mobile
+   - Keine globalen Overrides, vollständig entkoppelt
+*/
+
+@charset "UTF-8";
+
+/* ======================================================================
+   Lokale Fallback-Tokens & Avatar-Definitionen
+====================================================================== */
+:root{
+  /* Fallbacks */
+  --ct-bg:#0b0c10; --ct-ink:#e7eef7; --ct-muted:#b5c0cf;
+  --ct-panel:#18344f; --ct-panel-2:#1d3c59; --ct-border:#2a4a68;
+  --ct-brand:#00C6FF; --ct-ok:#00FF85; --ct-warn:#FFD27A; --ct-danger:#FF7D7D;
+  --ct-focus: 2px solid color-mix(in srgb, var(--ct-brand) 45%, transparent);
+
+  /* Avatare */
+  --coach-img-ben:    url("../media/ben-small.png");
+  --coach-img-chloe:  url("../media/chloe-small.png");
+  --coach-img-mila:   url("../media/mila-small.png");
+  --coach-img-archer: url("../media/archer-small.png");
+}
+
+/* Mode-Mapping */
+html[data-mode="school"]{     --ct-brand:#2EC27E; --ct-ok:#2EC27E; }
+html[data-mode="university"]{ --ct-brand:#00C6FF; }
+
+/* Avatar-Zuweisung per Sprache/Mode */
+html[lang="de"][data-mode="school"]      { --coach-img: var(--coach-img-ben); }
+html[lang="en"][data-mode="school"]      { --coach-img: var(--coach-img-chloe); }
+html[lang="de"][data-mode="university"]  { --coach-img: var(--coach-img-mila); }
+html[lang="en"][data-mode="university"]  { --coach-img: var(--coach-img-archer); }
+
+/* Avatar-Zuweisung per data-coach */
+html[data-coach="ben"]    { --coach-img: var(--coach-img-ben); }
+html[data-coach="chloe"]  { --coach-img: var(--coach-img-chloe); }
+html[data-coach="mila"]   { --coach-img: var(--coach-img-mila); }
+html[data-coach="archer"] { --coach-img: var(--coach-img-archer); }
+
+/* Globaler Zustand: Overlay geöffnet */
+html.ct-open{ overflow:hidden; }
+
+/* ======================================================================
+   Backdrop & Container
+====================================================================== */
+.ct-backdrop{
+  position:fixed; inset:0; z-index:61;
+  background: rgba(6,12,20,.45);
+  -webkit-backdrop-filter: blur(6px) saturate(1.05);
+  backdrop-filter: blur(6px) saturate(1.05);
+  opacity:0; pointer-events:none; transition:opacity .22s ease;
+}
+html[data-mode="school"] .ct-backdrop{ background: rgba(8,20,12,.35); }
+.ct-backdrop[aria-hidden="false"]{ opacity:1; pointer-events:auto; }
+
+.ct-box{
+  --ct-w: 560px;
+  position: fixed; z-index:62;
+  left:50%; top: calc(var(--header-h,56px) + 16px);
+  width: min(92vw, var(--ct-w));
+  transform: translate(-50%,-10px);
+  opacity: 0; pointer-events:none;
+
+  background: color-mix(in srgb, var(--panel, var(--ct-panel)) 92%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border, var(--ct-border)), transparent 10%);
+  border-radius: 16px;
+  box-shadow: var(--shadow-2, 0 18px 40px rgba(0,0,0,.18));
+  padding: 14px;
+
+  transition: transform .28s cubic-bezier(.22,.61,.36,1), opacity .24s ease;
+}
+.ct-backdrop[aria-hidden="false"] .ct-box{ opacity:1; transform: translate(-50%,0); pointer-events:auto; }
+.ct-box.ct--sm{ --ct-w: 480px; } 
+.ct-box.ct--lg{ --ct-w: 620px; }
+
+/* Mobile Bottom-Sheet */
+@media (max-width:639.98px){
+  .ct-box{ left:50%; right:auto; top:auto; bottom:8px; transform: translate(-50%, 14px); }
+  .ct-backdrop[aria-hidden="false"] .ct-box{ animation: ct-sheet-in .34s cubic-bezier(.2,.8,.2,1); }
+  @keyframes ct-sheet-in{
+    0%{ transform: translate(-50%, 16px); }
+    60%{ transform: translate(-50%, -2px); }
+    100%{ transform: translate(-50%, 0); }
+  }
+}
+
+/* ======================================================================
+   Head
+====================================================================== */
+.ct-head{
+  display:grid; grid-template-columns: 64px 1fr auto; grid-template-areas: "ava title x";
+  align-items:center; gap:10px; margin-bottom: 10px;
+}
+.ct-ava{
+  grid-area:ava; position:relative; width:64px; height:64px;
+  border-radius:999px; overflow:hidden;
+  background: center/cover no-repeat var(--coach-img, var(--panel-2, var(--ct-panel-2)));
+  border:1px solid var(--border, var(--ct-border));
+  box-shadow: 0 6px 16px rgba(0,0,0,.14);
+}
+.ct-ava img{ display:block; width:100%; height:100%; object-fit:cover; }
+.ct-ava .ct-ava-fallback{
+  position:absolute; inset:0; display:grid; place-items:center;
+  font: 800 1.15rem/1 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif;
+  color: var(--ink, var(--ct-ink));
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--brand, var(--ct-brand)) 22%, var(--panel-2, var(--ct-panel-2))),
+    color-mix(in srgb, var(--brand, var(--ct-brand)) 10%, var(--panel, var(--ct-panel))));
+  border:1px solid var(--border, var(--ct-border));
+}
+.ct-title{ grid-area: title; display:flex; align-items:center; gap:10px; min-width:0; }
+.ct-icon{ width:24px; height:24px; flex:0 0 24px; color: var(--ct-accent, var(--brand, var(--ct-brand))); }
+.ct-title h3{
+  margin:0; font:700 1.05rem/1.25 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif;
+  color: var(--ink, var(--ct-ink)); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+
+.ct-close{
+  grid-area:x; width:36px; height:36px; display:grid; place-items:center; cursor:pointer;
+  border:1px solid var(--border, var(--ct-border)); border-radius:999px;
+  background: var(--panel, var(--ct-panel)); color: var(--ink, var(--ct-ink));
+  transition: transform .06s ease, background .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+.ct-close:active{ transform: translateY(1px); }
+.ct-close:focus-visible{ outline: var(--ct-focus); outline-offset:2px; }
+
+/* ======================================================================
+   Body
+====================================================================== */
+.ct-body{ padding: 6px 2px 2px; }
+.ct-body p{ margin:.55em 0; }
+.ct-body ul{ list-style: disc; list-style-position: outside; padding-left: 1.2rem; margin:.5rem 0 0; }
+.ct-body ol{ list-style-position: outside; padding-left: 1.2rem; margin:.5rem 0 0; }
+.ct-body li{ margin:.38rem 0; }
+.ct-body li::marker{ color: var(--ct-accent, var(--brand, var(--ct-brand))); }
+.ct-body strong{
+  font-weight:700; background: color-mix(in srgb, var(--ct-accent, var(--brand, var(--ct-brand))) 14%, transparent);
+  padding:.06rem .3rem; border-radius:.42rem;
+}
+
+/* ======================================================================
+   Footer
+====================================================================== */
+.ct-actions{ display:flex; justify-content:flex-end; gap:8px; margin-top:10px; }
+.ct-btn{
+  border:1px solid var(--border, var(--ct-border));
+  background: var(--panel, var(--ct-panel)); color: var(--ink, var(--ct-ink));
+  padding:8px 12px; border-radius:12px; cursor:pointer;
+  transition: transform .06s ease, border-color .18s ease, background .18s ease;
+}
+.ct-btn:hover{ border-color: color-mix(in srgb, var(--ct-accent, var(--brand, var(--ct-brand))) 40%, var(--border, var(--ct-border))); }
+.ct-btn:active{ transform: translateY(1px); }
+.ct-btn.ct-ok{
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--ct-accent, var(--brand, var(--ct-brand))) 62%, transparent),
+    color-mix(in srgb, var(--ct-accent, var(--brand, var(--ct-brand))) 36%, transparent));
+  border: 1px solid color-mix(in srgb, var(--ct-accent, var(--brand, var(--ct-brand))) 36%, var(--border, var(--ct-border)));
+  color:#061018; border-radius: 999px;
+}
+
+/* ======================================================================
+   Case-Varianten
+====================================================================== */
+.ct-box{ --ct-accent: var(--brand, var(--ct-brand)); }
+.ct-box.ct--info    { --ct-accent: var(--brand, var(--ct-brand)); }
+.ct-box.ct--merke   { --ct-accent: var(--brand, var(--ct-brand)); }
+.ct-box.ct--summary { --ct-accent: color-mix(in srgb, var(--brand, var(--ct-brand)) 30%, var(--muted, var(--ct-muted))); }
+.ct-box.ct--takehome{ --ct-accent: var(--ok, var(--ct-ok)); }
+.ct-box.ct--warn    { --ct-accent: color-mix(in srgb, var(--danger, var(--ct-danger)) 80%, var(--warn, var(--ct-warn))); }
+
+.ct-box::before{
+  content:""; display:block; height:3px; border-radius:3px; margin: -6px -6px 8px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    color-mix(in srgb, var(--ct-accent) 55%, var(--panel, var(--ct-panel))) 18%,
+    color-mix(in srgb, var(--ct-accent) 70%, var(--panel, var(--ct-panel))) 50%,
+    color-mix(in srgb, var(--ct-accent) 55%, var(--panel, var(--ct-panel))) 82%,
+    transparent 100%);
+}
+
+/* ======================================================================
+   A11y & Z-Index Fix
+====================================================================== */
+@media (prefers-reduced-motion: reduce){
+  .ct-backdrop, .ct-box{ transition:none !important; animation:none !important; }
+}
+
+/* Immer über Playhead-Scrim */
+html.ct-open .ct-backdrop{ z-index:2147483648; }
+html.ct-open .ct-box{      z-index:2147483649; }
+
+/* === Coach Text: Titel soll exakt wie der Body-Text wirken === */
+/* Bevorzuge die Overlay-Tinte (ct-ink); fallback: globale ink */
+.ct-box .ct-title h3{
+  color: var(--ct-ink, var(--ink));
+  font-weight: 700; /* optional, für etwas mehr Präsenz */
+}
+/* === Coach Text: Titel immer dunkel sichtbar === */
+.ct-box .ct-title h3 {
+  color: #111;       /* fast schwarz, sehr gute Lesbarkeit */
+  font-weight: 700;  /* optional für stärkere Präsenz */
+}
+/* === Coach Text Titel Farben je Modus === */
+
+/* School: immer dunkel */
+html[data-mode="school"] .ct-box .ct-title h3 {
+  color: #111;   /* fast schwarz */
+  font-weight: 700;
+}
+
+/* University: immer hell */
+html[data-mode="university"] .ct-box .ct-title h3 {
+  color: #fff;   /* klar weiß */
+  font-weight: 700;
+}

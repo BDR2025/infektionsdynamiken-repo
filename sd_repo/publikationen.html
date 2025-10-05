@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="de" data-mode="school" data-page="publikationen" data-coach="ben">
+  <head>
+    <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Publikationen · Repository (DE)</title>
+    <link rel="icon" href="favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="favicon-192.png">
+    <link rel="stylesheet" href="css/tokens.css" />
+    <link rel="stylesheet" href="css/base.css" />
+    <link rel="stylesheet" href="css/layout.css" />
+    <link rel="stylesheet" href="css/components.css" />
+    <link rel="stylesheet" href="css/patterns.css" />
+    <link rel="stylesheet" href="css/pages.css" />
+    <link rel="stylesheet" href="css/landing.css" />
+    <style>
+@media (max-width:1000px){ .landing-header .nav-links{display:none;} }
+.wordmark-short{display:none;}
+@media (max-width:680px){ .wordmark-long{display:none;} .wordmark-short{display:block;} }
+@media (max-width:499.98px){ .wordmark-long,.wordmark-short{display:none;} }
+.repo-grid{ display:grid; grid-template-columns: 1fr; gap:16px; }
+@media (min-width:1024px){ .repo-grid{ grid-template-columns: minmax(320px,0.9fr) 1.6fr; } }
+.preview-card{ background:#fff; border:1px solid #e6e8eb; border-radius:12px; padding:16px; min-height:320px; }
+.preview-head{ display:flex; align-items:center; justify-content:space-between; gap:.75rem; border-bottom:1px solid #eef0f2; padding-bottom:.5rem; margin-bottom:.75rem; }
+.preview-actions .btn,.tree-controls .btn{ border:1px solid #e6e8eb; border-radius:8px; background:#fff; padding:.35rem .6rem; cursor:pointer; }
+.preview-body{ max-height:60vh; overflow:auto; }
+.tree{ font-family: ui-monospace, Menlo, Consolas, monospace; border:1px dashed #e6e8eb; border-radius:12px; padding:12px; background:#fff; }
+.tree details{ margin-left:.75rem; }
+.tree .file{ margin-left:1.5rem; padding:2px 0; }
+.file-active{ font-weight:600; text-decoration:underline; }
+@media print{ header,.tree-controls,.tree,.landing-footer,.eyebrow,.accent-line,.container.bar{display:none!important;} .preview-body{max-height:none;overflow:visible;} }
+    </style>
+  </head>
+  <body class="repo">
+    <header class="landing-header" role="banner">
+      <div class="container bar">
+        <a href="index.html" class="brand" aria-label="Startseite">
+          <img class="brand-icon" src="assets/icons/logo-id.svg" alt="Infektionsdynamiken.de" />
+          <div class="wordmark wordmark-long"><div class="brand-title">Infektionsdynamiken verstehen</div><div class="brand-claim">Repository · transparent &amp; zugänglich</div></div>
+          <div class="wordmark wordmark-short"><div class="brand-title">Infektionsdynamiken.de</div><div class="brand-claim">Repository</div></div>
+        </a>
+        <nav class="landing-nav" aria-label="Hauptnavigation Repository">
+          <div class="nav-links">
+            <a href="architektur.html">Architektur</a>
+            <a href="publikationen.html" class="active" aria-current="page">Publikationen</a>
+            <a href="lehre.html">Lehre</a>
+            <a href="https://infektionsdynamiken.de/#legal">Rechtliches</a>
+          </div>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section class="section container">
+        <article class="card pad">
+          <span class="eyebrow">Publikationen</span>
+          <hr class="accent-line" />
+          <div class="repo-grid">
+            <div>
+              <h2>Verzeichnisbaum</h2>
+              <p class="muted">Nur Inhalte aus <code>2_publications/</code>. Direktlinks via <code>#preview=…</code>.</p>
+              <div class="tree-controls">
+                <button id="expandAll" class="btn" type="button">Alles aufklappen</button>
+                <button id="collapseAll" class="btn" type="button">Alles zuklappen</button>
+              </div>
+              <div class="tree" id="tree">Manifest wird geladen …</div>
+            </div>
+            <div>
+              <div class="preview-card" id="preview">
+                <div class="preview-head">
+                  <div class="preview-title" id="previewTitle">Keine Datei ausgewählt</div>
+                  <div class="preview-actions">
+                    <a id="downloadBtn" class="btn" href="#" download>Download</a>
+                    <button id="printBtn" class="btn" type="button">Drucken</button>
+                  </div>
+                </div>
+                <div class="preview-body" id="previewBody" aria-live="polite">Wähle links eine Datei aus.</div>
+              </div>
+            </div>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <footer class="landing-footer">
+      <div class="container"><p class="muted">© CC BY 4.0 · Infektionsdynamiken – Repository (Preview).</p></div>
+    </footer>
+
+    <!-- Root auf neuen Ordner umgestellt -->
+    <script>window.ALLOWED_ROOT="2_publications";</script>
+    <script src="js/section.js"></script>
+  </body>
+</html>
