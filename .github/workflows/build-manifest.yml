@@ -3,40 +3,51 @@ name: Build manifest
 on:
   push:
     branches: [ main, master ]
-  workflow_dispatch:
+    paths-ignore:
+      - 'api/manifest.json'   # verhindert CI-Schleife bei Bot-Commits
+  workflow_dispatch: {}
 
 permissions:
-  contents: write  # erlaubt Push mit GITHUB_TOKEN
+  contents: write
 
 concurrency:
   group: manifest-update-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout sd_repo (dieses Repo)
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0          # komplette Historie, nötig für Rebase
+          fetch-depth: 0
           persist-credentials: true
+          path: .
+
+      - name: Checkout sd_engine (zweites Repo)
+        uses: actions/checkout@v4
+        with:
+          # 👉 Falls euer Org/Repo abweicht, Repo-Variable ENGINE_REPO_FULL setzen (z.B. "ORG/REPO").
+          repository: ${{ vars.ENGINE_REPO_FULL || 'infektionsdynamiken/infektionsdynamiken-engine' }}
+          fetch-depth: 0
+          path: sd_engine
 
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.x'
 
-      - name: Debug workspace (optional)
+      - name: Debug workspace (kurz)
         run: |
-          echo "PWD=$(pwd)"
           echo "Branch=${{ github.ref_name }}"
-          find . -maxdepth 2 -type d | sort
-          ls -la
+          echo "PWD=$(pwd)"
+          find . -maxdepth 2 -type d | sort || true
 
-      - name: Generate manifest
+      - name: Generate manifest (Overlay: sd_repo + sd_engine→1-2 UID-E)
         env:
-          INCLUDED_ROOTS: "1_architecture,2_publications,3_leraning"
+          # leer lassen => Top-Level-Verzeichnisse werden automatisch erkannt
+          INCLUDED_ROOTS: ""
         run: |
           python3 scripts/gen_manifest.py
           test -f api/manifest.json && jq '.generated' api/manifest.json || true
@@ -45,7 +56,7 @@ jobs:
         env:
           BRANCH_NAME: ${{ github.ref_name }}
         run: |
-          set -e
+          set -euo pipefail
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
@@ -57,11 +68,16 @@ jobs:
 
           git commit -m "chore: update manifest [skip ci]"
 
-          # bis zu 3 Versuche bei Race-Conditions
           for attempt in 1 2 3; do
             echo "Push attempt #$attempt"
-            git fetch origin "$BRANCH_NAME"
-            git rebase "origin/$BRANCH_NAME" || { echo "Rebase failed, fallback merge"; git rebase --abort || true; git pull --no-rebase --no-edit origin "$BRANCH_NAME"; }
+            git fetch origin "$BRANCH_NAME" --depth=1
+            if git rebase "origin/$BRANCH_NAME"; then
+              echo "Rebase ok"
+            else
+              echo "Rebase failed, fallback merge"
+              git rebase --abort || true
+              git pull --no-rebase --no-edit origin "$BRANCH_NAME"
+            fi
             if git push origin "HEAD:$BRANCH_NAME"; then
               echo "Push succeeded."
               break
@@ -72,4 +88,5 @@ jobs:
             fi
             sleep 2
           done
+
 
