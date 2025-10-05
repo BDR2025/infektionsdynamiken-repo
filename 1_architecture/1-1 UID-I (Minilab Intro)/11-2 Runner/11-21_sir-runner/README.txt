@@ -1,9 +1,0 @@
-Der Runner im Detail
-
-Der Runner setzt die Intro-Simulation um und bündelt Berechnung, Darstellung und Ablaufsteuerung in einer Einheit. Er liest beim Start den Kontext der Seite aus und erkennt Sprache, Modus und Coach. Auf dieser Grundlage wählt er eine geeignete Sequenz, die die Abfolge der didaktischen Etappen festlegt. Jede Sequenz bestimmt, welche Kurven sichtbar sind, wann Spuren stehen bleiben und wann die Darstellung zurückgesetzt wird. So entsteht aus einem einzigen Runner eine passgenaue Variante für Ben, Chloé, Mila oder Archer, ohne dass getrennte Dateien nötig sind.
-
-Die Modellrechnung erfolgt deterministisch mit dem festen Integrator Euler und nutzt eine fraktionierte Skala mit einer normierten Population. Aus den festgelegten Parametern berechnet der Runner die Zeitreihen und zeichnet sie direkt in das Canvas. Er steuert dabei auch Hilfslinien und Marker, die in den einzelnen Etappen eingeblendet werden. Die Darstellung bleibt über den gesamten Ablauf konsistent und wird bei jedem Durchlauf identisch wiedergegeben.
-
-Während die Sequenz läuft, erzeugt der Runner fortlaufend Kennzahlen und gibt sie an die Oberfläche weiter. Dazu gehören die relativen Anteile der Kompartimente, der effektive Reproduktionswert und modellabhängige Größen. Die Werte werden in die vorgesehenen Decks eingefügt, sodass die numerische Sicht stets mit dem gezeigten Kurvenbild übereinstimmt. Interaktive Eingriffe sind nicht vorgesehen. Der Runner spielt seine Sequenz autonom ab und konzentriert sich auf Rechenlogik, Visualisierung und die saubere Weitergabe der Kennzahlen.
-
-Auf diese Weise liefert der Runner die inhaltliche Substanz des Intros. Er vereint Simulation, Visualisierung und didaktische Choreografie und erzeugt aus einem gemeinsamen Codepfad die coachspezifischen Varianten, die sich im Ablauf und in der Inszenierung unterscheiden, jedoch auf derselben stabilen Grundlage beruhen.
