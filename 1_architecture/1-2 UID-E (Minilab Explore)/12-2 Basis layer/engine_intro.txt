@@ -1,9 +1,0 @@
-Die Engine im Detail
-
-Die Engine bildet den numerischen Kern der UID Explore Engine. Sie nimmt die konsolidierten Parameter auf und berechnet daraus die Entwicklung der Kompartimente im zeitlichen Verlauf. Grundlage sind die bekannten Modelle wie SIR, SEIR, SIRD oder SIRV, die jeweils durch Differentialgleichungen beschrieben werden.
-
-Wenn ein Nutzer Parameter verändert oder eine Simulation startet, ruft der Director die Engine auf. Diese erzeugt die Zeitreihen für die einzelnen Zustände und gibt sie gemeinsam mit ergänzenden Informationen zurück. Alle weiteren Darstellungen wie das Chart, die KPI Karten oder das Zustandsvektorrad greifen auf diese Ergebnisse zu und bleiben dadurch konsistent.
-
-Die Engine ist so konzipiert, dass sie robust und effizient arbeitet. Sie nutzt numerische Integrationsverfahren wie Euler, Heun oder Runge Kutta und korrigiert Abweichungen automatisch. Auf diese Weise bleibt die Summe aller Kompartimente stets nahe an der Gesamtbevölkerung, auch wenn viele Schritte berechnet werden.
-
-Damit erfüllt die Engine die zentrale Aufgabe des Systems. Sie verwandelt Eingaben in konkrete Simulationen und zeigt jede Veränderung unmittelbar in den erzeugten Kurven. Lernende und Lehrende können so die Dynamik von Infektionsmodellen klar und transparent nachvollziehen.

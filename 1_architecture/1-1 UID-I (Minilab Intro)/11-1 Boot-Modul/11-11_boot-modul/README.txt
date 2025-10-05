@@ -1,9 +1,0 @@
-Das Boot-Modul im Detail
-
-Das Boot-Modul verbindet die Intro-Simulation mit der Oberfläche. Es liest die vorbereiteten Elemente der Seite ein, startet den passenden Runner und sorgt dafür, dass Kurvenbild und Kennzahlen an der richtigen Stelle erscheinen. Während der Runner rechnet und zeichnet, kümmert sich das Boot-Modul um die Einbettung in die Seite. Es hält die Struktur schlank und führt alles zu einem stimmigen Ablauf zusammen, so wie es in der Architektur von UID-Intro vorgesehen ist. 
-
-Beim Start erfasst das Boot-Modul die relevanten Hosts. Das sind das Canvas für die Darstellung und die Bereiche für die Kennzahlen. Anschließend übergibt es dem Runner die nötigen Referenzen und nimmt die laufenden Werte wieder entgegen. Die Kennzahlen landen ohne Umweg in den vorgesehenen Decks. Auf diese Weise bleibt die Simulation im Hintergrund und die Präsentation im Vordergrund, was dem Anspruch einer klaren Orchestrierung entspricht. 
-
-Darüber hinaus bindet das Boot-Modul das Coach-Element ein, sofern es vorhanden ist. Im regulären Intro öffnet der Coach die begleitende Erklärung und führt durch die Etappen, während die Simulation abläuft. In einer reduzierten Demo kann dieser Teil fehlen. Das Boot-Modul bleibt dann bei der reinen Verdrahtung zwischen Runner, Canvas und Kennzahlen. Die technische Inbetriebnahme des Runners ist dabei bewusst einfach gehalten und kann entweder über das Boot-Modul erfolgen oder direkt, wenn eine schlanke Demo ohne zusätzliche Hülle gezeigt werden soll. 
-
-So entsteht eine klare Aufgabenteilung. Das Boot-Modul sorgt für Einbettung, Steuerung und ein aufgeräumtes Interface. Der Runner liefert die Inhalte und den Ablauf. Beides zusammen ergibt das Intro, das ohne Interaktion durchläuft und die wichtigsten Größen verständlich darstellt, konsistent mit der allgemeinen Beschreibung von UID-Intro und der technischen Handhabung der Runner.
