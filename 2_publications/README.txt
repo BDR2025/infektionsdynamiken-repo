@@ -1,3 +1,0 @@
-Publikationen
-
-Inhalte folgen demnächst ...
