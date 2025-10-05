@@ -5,18 +5,6 @@
 
   "overlay_rules": [
     {
-      "virtual_prefix": "1_architecture/1-2 UID-E (Minilab Explore)",
-      "source_prefix": "sd_engine",
-      "carry_suffix": true,
-      "origin_label": "engine"
-    },
-    {
-      "virtual_prefix": "1_architecture/1-2 UID-E",
-      "source_prefix": "sd_engine",
-      "carry_suffix": true,
-      "origin_label": "engine"
-    },
-    {
       "virtual_prefix": "1_architecture/1-2 UID e-minilab-explorer",
       "source_prefix": "sd_engine",
       "carry_suffix": true,
@@ -28,6 +16,6 @@
   "engine_cdn_base": "https://cdn.jsdelivr.net/gh/BDR2025/infektionsdynamiken-engine@main",
 
   "exclude_dirs": [".git", ".github", "api"],
-  "exclude_globs": ["**/node_modules/**", "**/.git/**", "**/.DS_Store"]
+  "exclude_globs": ["**/node_modules/**", "**/.git/**", "**/.DS_Store"],
+  "follow_symlinks": false
 }
-
