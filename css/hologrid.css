@@ -1,0 +1,122 @@
+/* Infektionsdynamiken · features/hologrid.css
+   Author: B. D. Rausch · CC BY 4.0
+   Created: 2025-09-18
+   Purpose:
+   Theme-fähige Hologrid-Cards (Grid + Card + Icon-Layer) als wiederverwendbare Komponente.
+   Ersetzt Inline-Blöcke in About/Entrance/Index (School/University).
+*/
+
+@layer features {
+
+/* ========== 1) Grid ================================================= */
+.holo-grid{
+  display:grid;
+  gap: clamp(12px, 1.6vw, 18px);
+  margin-top: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+@media (min-width: 1024px){
+  .holo-grid.is-4 { grid-template-columns: repeat(4, 1fr); } /* ehedem lp-four / station-grid.lp-four */
+}
+
+/* ========== 2) Card Basis ========================================== */
+.holo-card{
+  position: relative;
+  display: block;
+  padding: var(--holo-pad, 18px 20px 22px);
+  min-height: var(--holo-minh, 120px);
+  border-radius: 14px;
+  color: var(--holo-on-surface);
+  background: linear-gradient(180deg, var(--holo-bg-1), var(--holo-bg-2));
+  border: 1px solid var(--holo-border);
+  box-shadow: var(--holo-shadow);
+  text-decoration: none;
+  overflow: hidden;
+  transform-style: preserve-3d;
+  transition: transform .28s ease, box-shadow .28s ease, border-color .28s ease;
+}
+
+/* Hologrid Layer */
+.holo-card::before {
+  content:""; position:absolute; inset:-1px;
+  background:
+    radial-gradient(110px 70px at 85% 85%, color-mix(in oklab, var(--holo-accent) 28%, transparent) 0%, transparent 70%),
+    radial-gradient(140px 100px at 15% 15%, color-mix(in oklab, var(--holo-accent) 18%, transparent) 0%, transparent 75%),
+    repeating-linear-gradient(0deg, var(--holo-grid) 0 1px, transparent 1px 26px),
+    repeating-linear-gradient(90deg, var(--holo-grid) 0 1px, transparent 1px 26px);
+  opacity: var(--holo-grid-alpha, .85);
+  z-index: 0;
+}
+
+/* Specular sweep */
+.holo-card::after {
+  content:""; position:absolute;
+  left:-60%; top:-140%;
+  width:220%; height:220%;
+  background: linear-gradient(75deg, transparent 46%, var(--holo-specular) 50%, transparent 54%);
+  transform: translateX(-15%);
+  transition: transform .6s ease;
+  pointer-events:none; z-index:1;
+}
+
+.holo-title{ margin:2px 0 4px; font-size:1.06rem; font-weight:800; }
+.holo-sub  { margin:0; color: var(--holo-muted); font-size:.98rem; }
+
+/* piktografische Ecke */
+.holo-icon{
+  position:absolute; right:-6%; bottom:-6%;
+  width:48%; height:auto; opacity: var(--holo-icon-alpha, .18);
+  color: var(--holo-accent); pointer-events:none; z-index:0;
+  filter: drop-shadow(0 1px 0 rgba(0,0,0,.08));
+}
+
+/* Hover / Focus */
+.holo-card:hover        { transform: perspective(900px) rotateX(1deg) rotateY(-1.25deg) translateY(-1px); }
+.holo-card:focus-visible{ outline: 2px solid color-mix(in oklab, var(--holo-accent) 60%, transparent); outline-offset: 3px; }
+.holo-card:hover::after { transform: translateX(12%); }
+
+@media (prefers-reduced-motion: reduce){
+  .holo-card, .holo-card::after { transition:none; }
+  .holo-card:hover{ transform:none; }
+}
+
+/* ========== 3) Theme-Presets ====================================== */
+/* University (Dark) – aus deinen Inline-Blocks extrahiert */
+html[data-mode="university"] .holo-grid,
+.holo-grid.is-university {
+  --holo-on-surface: #e8f1ff;
+  --holo-muted: rgba(232,241,255,.82);
+  --holo-border: rgba(232,241,255,.12);
+  --holo-accent: #5aa5ff;
+  --holo-grid: rgba(90,165,255,.22);
+  --holo-specular: rgba(255,255,255,.16);
+  --holo-bg-1: rgba(20,28,44,.94);
+  --holo-bg-2: rgba(16,22,36,.82);
+  --holo-shadow: 0 10px 36px rgba(0,0,0,.35);
+  --holo-pad: 16px 18px 18px;
+  --holo-minh: 120px;
+}
+
+/* School (Light) – aus deinen Inline-Blocks extrahiert */
+html[data-mode="school"] .holo-grid,
+.holo-grid.is-school {
+  --holo-on-surface: #0d1b2a;
+  --holo-muted: rgba(13,27,42,.72);
+  --holo-border: rgba(13,27,42,.12);
+  --holo-accent: #16a34a;
+  --holo-grid: rgba(22,163,74,.18);
+  --holo-specular: rgba(255,255,255,.60);
+  --holo-bg-1: rgba(255,255,255,.95);
+  --holo-bg-2: rgba(255,255,255,.84);
+  --holo-shadow: 0 8px 28px rgba(0,0,0,.08);
+  --holo-pad: 18px 20px 22px;
+  --holo-minh: 120px;
+}
+
+/* ========== 4) Kompakte Variante (z. B. Uni-Index top trio) ======== */
+.holo-grid.is-compact .holo-card{
+  --holo-minh: 120px;
+  --holo-pad: 16px 18px 18px;
+}
+
+} /* @layer features */

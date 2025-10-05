@@ -1,0 +1,155 @@
+/* Infektionsdynamiken.de / infectiondynamics.eu · layout.css
+   Author: B. D. Rausch
+   License: CC BY 4.0
+   Created: 2025-09-10
+   Last Review: 2025-09-18
+   Last Change: 2025-09-18
+
+   Purpose:
+   Layout-Grundlagen: Container, generische Grids und das Minilab-Explore-Grid.
+   Mobile-first; .ml-grid ist die einzig maßgebliche Quelle für Explore.
+*/
+
+@layer layout {
+
+  /* =============== Container & Basis-Grids ========================= */
+  .container{
+    width: min(var(--container-max), 92vw);
+    margin-inline: auto;
+    padding-inline: var(--space-4);
+  }
+  .grid{ display: grid; gap: var(--space-6); }
+
+  /* =============== Minilab Explore Grid (Autorität) ================ */
+  /* Mobile-first: einspaltig (Chart → KPIs → Controls) */
+  .ml-grid{
+    display:grid; gap: var(--space-6);
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "chart"
+      "kpis"
+      "controls";
+  }
+
+  .ml-chart   { grid-area: chart; order: 1; }
+  .ml-kpis    {
+    grid-area: kpis;
+    display:grid; gap: var(--space-4);
+    grid-template-columns: 1fr; /* mobil: 1 Spalte */
+  }
+  .ml-controls{ grid-area: controls; display:flex; flex-direction:column; gap: var(--space-4); order: 2; }
+
+  /* Desktop: 2 Spalten ab 1024px (2 / 1) */
+  @media (min-width: 1024px){
+    .ml-grid{
+      grid-template-columns: 2fr 1fr;
+      grid-template-areas:
+        "chart   controls"
+        "kpis    controls";
+      align-items: start;
+    }
+    .ml-kpis{ grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .ml-chart   { order: 1; }
+    .ml-controls{ order: 1; }
+  }
+}
+
+/* =============== About-Block ======================================= */
+.about-block{
+  display: grid;
+  grid-template-columns: 160px 1fr;   /* Logo-Spalte / Text-Spalte */
+  gap: var(--space-4);
+  align-items: start;
+  margin-top: var(--space-3);
+}
+.about-block .about-logo{
+  height: 100px; width: auto; object-fit: contain; filter: none; display: block;
+}
+
+/* Kompakt auf Phones: Logo über Text */
+@media (max-width: 640px){
+  .about-block{ grid-template-columns: 1fr; }
+  .about-block .about-logo{ height: 100px; margin-bottom: var(--space-2); }
+}
+
+
+
+
+
+
+
+/* ===== Rahmenseiten · Grid-Katalog (mobile-first) ================== */
+/* 1) Generische Helfer für Sections */
+.section-card .grid { display:grid; gap: var(--space-6); }
+.section-card .grid-tight { display:grid; gap: var(--space-3); }
+
+/* 2) Katalog: Karten-Layouts (1 → 2 → 3/4 Spalten) */
+/* Bestehend: .cards-6 ist schon im Einsatz (About/Index) — wir normieren responsives Verhalten */
+.cards-3, .cards-4, .cards-6 {
+  display:grid; gap: var(--space-4);
+  grid-template-columns: 1fr; /* phones */
+}
+@media (min-width: 640px){
+  .cards-3, .cards-4, .cards-6 { grid-template-columns: repeat(2, minmax(0,1fr)); } /* sm */
+}
+@media (min-width: 1024px){
+  .cards-3 { grid-template-columns: repeat(3, minmax(0,1fr)); }   /* lg: 3-spaltig */
+  .cards-4 { grid-template-columns: repeat(4, minmax(0,1fr)); }   /* lg: 4-spaltig */
+  .cards-6 { grid-template-columns: repeat(3, minmax(0,1fr)); }   /* lg: 3-spaltig (6 Einträge → 2 Reihen) */
+}
+@media (min-width: 1280px){
+  .cards-6 { grid-template-columns: repeat(3, minmax(0,1fr)); }   /* xl: stabil 3 */
+}
+
+/* 3) Katalog: „2-2“, „2-3“ & „4-flex“ Presets (für gemischte Inhalte) */
+/* .grid-2-2: 2 Spalten ab md, bleibt kompakt */
+.grid-2-2 {
+  display:grid; gap: var(--space-6);
+  grid-template-columns: 1fr;            /* phones */
+}
+@media (min-width: 768px){
+  .grid-2-2 { grid-template-columns: repeat(2, minmax(0,1fr)); }  /* md: 2 */
+}
+
+/* .grid-2-3: 1→2→3 Spalten Skalierung (klassisch für Karten + Textblöcke) */
+.grid-2-3 {
+  display:grid; gap: var(--space-6);
+  grid-template-columns: 1fr;
+}
+@media (min-width: 768px){
+  .grid-2-3 { grid-template-columns: repeat(2, minmax(0,1fr)); }  /* md: 2 */
+}
+@media (min-width: 1280px){
+  .grid-2-3 { grid-template-columns: repeat(3, minmax(0,1fr)); }  /* xl: 3 */
+}
+
+/* .grid-4-flex: 1→2→3→4 Spalten (sehr dichte Grids, z.B. Icon-Kacheln) */
+.grid-4-flex {
+  display:grid; gap: var(--space-3);
+  grid-template-columns: 1fr;            /* phones */
+}
+@media (min-width: 640px){
+  .grid-4-flex { grid-template-columns: repeat(2, minmax(0,1fr)); } /* sm: 2 */
+}
+@media (min-width: 1024px){
+  .grid-4-flex { grid-template-columns: repeat(3, minmax(0,1fr)); } /* lg: 3 */
+}
+@media (min-width: 1440px){
+  .grid-4-flex { grid-template-columns: repeat(4, minmax(0,1fr)); } /* 4 auf breiten Screens */
+}
+
+/* 4) „Subgrid“-Abschnitte innerhalb von .section-card (A/B/C-Zonen)  */
+/* Nutze .gs-row für Zeilenstapel und .gs-inline für Nebeneinander */
+.gs-row    { display:grid; gap: var(--space-4); grid-auto-flow: row; }
+.gs-inline { display:grid; gap: var(--space-4); grid-template-columns: 1fr; }
+@media (min-width: 1024px){
+  .gs-inline { grid-template-columns: 2fr 3fr; } /* Beispiel: Text (2) + Cards (3) */
+}
+
+/* 5) Feinheiten für „Eyebrow + Hx + Cards“ Blöcke */
+.section-card > .eyebrow + .accent-line + h2 + .cards-6,
+.section-card > .eyebrow + .accent-line + h2 + .cards-4,
+.section-card > .eyebrow + .accent-line + h2 + .cards-3 {
+  margin-top: var(--space-4);
+}
+

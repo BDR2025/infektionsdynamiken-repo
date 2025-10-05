@@ -1,0 +1,130 @@
+/* Infektionsdynamiken.de / infectiondynamics.eu · patterns.css
+   Author: B. D. Rausch
+   License: CC BY 4.0
+   Version: v1.7
+   Created: 2025-09-12
+   Last Review: 2025-09-18
+   Last Change: 2025-09-18
+
+   Purpose:
+   Muster & Utilities für Karten, KPIs, Legenden, Button-Reihen,
+   Chart-Spacing und neutrale Layout-Grids (z. B. grid-2).
+*/
+
+@layer patterns {
+
+  /* === Chart & Controls Wrapping =============================== */
+  .chart-wrap{
+    background: var(--panel);
+    border:1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-3);
+    position:relative;
+    margin-bottom: .5rem; /* spacing für chart column */
+  }
+
+  /* SCOPE FIX: nur im Minilab-Controls-Bereich überschreiben,
+     um Kollisionen mit components.css (details.controls-group) zu vermeiden */
+  .ml-controls .controls-group{
+    border:0;
+    border-radius: var(--radius-lg);
+    padding:0;
+  }
+  .ml-controls .controls-group > h3,
+  .ml-controls .controls-group > summary{
+    margin-bottom: var(--space-2);
+    font-size: var(--step-1);
+  }
+
+  /* Formula / static KPIs */
+  .formula-panel{
+    background: var(--panel);
+    border:1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: var(--space-3);
+  }
+  .formula-box{ margin-top:.75rem; }
+
+  /* Coach chips row */
+  .coach-row{
+    display:flex; flex-wrap:wrap; gap: var(--space-3);
+    align-items:center; margin-bottom: var(--space-3);
+  }
+
+  .card-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom: var(--space-4); }
+  .ml-actions{ display:flex; gap:.5rem; }
+
+  /* === KPI decks under the chart ================================ */
+  .deck{
+    display:grid; gap: var(--space-4);
+    grid-template-columns: repeat(var(--cols,3), minmax(0,1fr));
+    margin-top: var(--space-3);
+  }
+
+  /* KPI color mapping */
+  .deck-comp .card.kpi[data-series="S"]{ border-left:4px solid var(--c-s); }
+  .deck-comp .card.kpi[data-series="I"]{ border-left:4px solid var(--c-i); }
+  .deck-comp .card.kpi[data-series="R"]{ border-left:4px solid var(--c-r); }
+  .deck-comp .card.kpi[data-series="E"]{ border-left:4px solid var(--c-e); }
+  .deck-comp .card.kpi[data-series="D"]{ border-left:4px solid var(--c-d); }
+  .deck-comp .card.kpi[data-series="V"]{ border-left:4px solid var(--c-v); }
+
+  /* === Legend =================================================== */
+  .legend-row{ display:flex; flex-wrap:wrap; gap: var(--space-3); margin-top: .25rem; margin-bottom:.75rem; }
+  .legend-chip{
+    display:inline-flex; align-items:center; gap:.5rem;
+    padding:.35rem .6rem; border-radius:999px;
+    border:1px solid var(--border); background: var(--panel);
+    cursor:pointer; user-select:none; line-height:1.1;
+    transition: transform .06s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease;
+  }
+  .legend-chip:hover{ transform: translateY(-1px); }
+  .legend-chip:focus-visible{ outline:none; box-shadow: var(--focus); }
+
+  /* EIN: gefüllter Punkt in Kurvenfarbe */
+  .legend-chip .dot{
+    width:14px; height:14px; border-radius:50%;
+    background: currentColor; /* klare Füllung */
+  }
+  /* AUS: leerer Ring in Kurvenfarbe */
+  .legend-chip.off .dot{
+    background: transparent; box-shadow: inset 0 0 0 2px currentColor;
+  }
+  .legend-chip .lab{ font-size:.9rem; color: var(--fg); white-space:nowrap; }
+  .legend-chip.off .lab{ opacity:.75; }
+
+  /* === KPI Tooltip ============================================== */
+  .kpi-tip{
+    position:fixed;
+    z-index: var(--z-modal, 100); /* Token-Skala statt fixer 1000 */
+    background: var(--panel); color: var(--fg);
+    border:1px solid var(--border); border-radius: var(--radius-md);
+    padding:.45rem .6rem; box-shadow: var(--shadow-1);
+    opacity:0; pointer-events:none;
+    transition: opacity .12s ease, transform .12s ease;
+    transform: translate(-9999px,-9999px);
+    font-size: var(--step--1);
+  }
+  .kpi-tip.on{ opacity:1; }
+
+  /* === Cards Grid & Button Row ================================== */
+  .cards-6{ display:grid; gap: var(--space-4); grid-template-columns: repeat(3, minmax(0,1fr)); }
+  @media (max-width: 1024px){ .cards-6{ grid-template-columns: 1fr; } } /* FIX: 1080→1024 */
+  .cards-6 .card{ padding: var(--space-4); }
+
+  .btn-row{ display:flex; flex-wrap:wrap; gap:.5rem; }
+
+  /* === Grid Utilities =========================================== */
+  .grid-2{ display:grid; gap: var(--space-5); }
+  @media (min-width:768px){ .grid-2{ grid-template-columns: 1fr 1fr; } }
+
+  /* === Extra spacing for chart column =========================== */
+  .live-kpi-wrap{ margin-top:.75rem; }
+  .vector-wheel{ margin-top:.75rem; }
+
+  /* === Motion Preferences ======================================= */
+  @media (prefers-reduced-motion: reduce){
+    .legend-chip:hover{ transform: none; }
+  }
+
+}

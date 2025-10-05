@@ -1,0 +1,61 @@
+.repo-grid > div:last-child {
+  min-width: 0; /* verhindert Rausschieben durch lange Inhalte */
+}
+.preview-title {
+  overflow-wrap: anywhere; /* erlaubt Zeilenumbruch im Pfad */
+  word-break: break-word;  /* Fallback */
+}
+
+
+.tree a.file-active {
+  font-weight: 600;            /* fett */
+  color: var(--brand);         /* Akzentfarbe (kommt aus Tokens) */
+  text-decoration: none;       /* Unterstreichung weg */
+}
+
+/* ================= Repository Tree & Preview ==================== */
+
+/* rechte Grid-Spalte darf schrumpfen, verhindert Rausschieben durch lange Titel */
+.repo-grid > div:last-child {
+  min-width: 0;
+}
+
+/* lange Pfade im Preview-Titel umbrechen */
+#previewTitle {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* Aktive Datei-Link im Baum */
+.tree a.file-active {
+  font-weight: 600;
+  color: var(--brand);          /* Brand-Farbe aus tokens.css */
+  text-decoration: none;
+}
+
+/* Aktiver Ordner (wenn README automatisch geladen wird) */
+.tree summary.folder-active {
+  font-weight: 700;
+  color: var(--brand);
+}
+
+/* Optional: Pfeil/Marker in Brand-Farbe einfärben */
+.tree details > summary.folder-active::marker {
+  color: var(--brand);
+}
+
+/* rechte Grid-Spalte darf schrumpfen */
+.repo-grid > div:last-child { min-width: 0; }
+
+/* lange Pfade im Preview-Titel umbrechen */
+#previewTitle { overflow-wrap: anywhere; word-break: break-word; }
+
+/* aktive Datei */
+.tree a.file-active{ font-weight:600; color:var(--brand); text-decoration:none; }
+
+/* aktiver Ordner (Auto-README) */
+.tree summary.folder-active{ font-weight:700; color:var(--brand); }
+/* optional: Marker einfärben */
+.tree details > summary.folder-active::marker { color: var(--brand); }
+
+

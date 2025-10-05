@@ -1,0 +1,315 @@
+/* Infektionsdynamiken.de / infectiondynamics.eu · components.css
+   Author: B. D. Rausch
+   License: CC BY 4.0
+   Version: 3.3
+   Created: 2025-09-11
+   Last Review: 2025-09-18
+   Last Change: 2025-09-18
+
+   Purpose:
+   Zentrale UI-Komponenten (Cards, Buttons, Chips, Badges, KPI, Slider,
+   Disclosure/Accordion, Eyebrow/Accent-Line, kleine Utilities, Canvas, Forms).
+   Baseline ohne Hover-Lift; Lift optional per data-page (journey|index|about).
+*/
+
+@layer components {
+
+  /* =========================================================
+   * 01 Cards (Basis · ohne Hover-Lift; opt-in s. unten)
+   * ======================================================= */
+  .card{
+    display:flex;
+    flex-direction:column;
+    background: var(--panel);
+    border:1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-1);
+    padding: var(--space-4);
+    color: var(--fg);
+    transition: transform .2s ease, box-shadow .2s ease;
+  }
+  .card:focus-within{
+    outline: 2px solid var(--accent, #00c6ff);
+    outline-offset: 2px;
+  }
+  /* KPI-Karte im Hover (wenn Tooltip .is-hover setzt) */
+  .card.kpi.is-hover{
+    transform: translateY(-1px);
+    box-shadow: 0 10px 26px rgba(0,0,0,.14);
+    transition: transform .12s ease, box-shadow .18s ease;
+  }
+  /* Karten in 6er-Grids auf gleiche Höhe strecken */
+  .cards-6{ align-items: stretch; }
+
+  /* =========================================================
+   * 02 Buttons
+   * ======================================================= */
+  .btn{
+    display:inline-flex; align-items:center; gap:.5rem;
+    padding:.55rem .9rem;
+    border-radius: var(--radius-md);
+    border:1px solid var(--border);
+    background: var(--panel);
+    color: var(--fg);
+    cursor:pointer; font-weight:500;
+    transition: filter .15s ease, transform .05s ease,
+                background .15s ease, border-color .15s ease;
+  }
+  .btn:hover { filter: brightness(0.98); }
+  .btn:active { transform: translateY(1px); }
+  .btn-primary { background: var(--brand); color:#fff; border-color: transparent; }
+
+  /* Tiny utility button (für Eyebrow-Row) */
+  .btn-tiny{
+    font-size:.75rem; padding:.2rem .5rem; border-radius:.5rem;
+    background: var(--panel-2, #f1f5f9); color: var(--muted);
+    border:1px solid var(--border);
+  }
+  .btn-tiny:hover{ background: var(--panel); color: var(--fg); }
+
+  /* =========================================================
+   * 03 Chips & Badges
+   * ======================================================= */
+  .chip{
+    display:inline-flex; align-items:center; gap:.5rem;
+    padding:.3rem .6rem; border-radius:999px;
+    background: color-mix(in srgb, var(--panel) 94%, #fff);
+    border:1px solid var(--border); color: var(--fg);
+  }
+  .chip.warn{
+    background: color-mix(in srgb, var(--warn, #FFD27A) 14%, var(--panel));
+  }
+  .badge{
+    font-size:.72rem; padding:.15rem .45rem; border-radius:.4rem;
+    background: color-mix(in srgb, var(--panel) 90%, #fff);
+    color: var(--fg);
+  }
+  .badge:focus-visible{
+    outline: 2px solid transparent;
+    box-shadow: 0 0 0 3px var(--ring);
+    border-radius:.5rem;
+  }
+
+  /* =========================================================
+   * 04 KPI
+   * ======================================================= */
+  .kpi{ display:flex; flex-direction:column; gap:.25rem; padding: var(--space-3); }
+  .kpi .kpi-label{ font-size: var(--step--1); color: var(--muted); }
+  .kpi .kpi-value{ font-size: var(--step-2); font-weight:600; color: var(--fg); }
+  /* Stack-Variante (rel oben, abs unten), beide rechtsbündig */
+  .kpi.kpi--stack .kpi-stack{
+    display:flex; flex-direction:column; align-items:flex-end; gap:.15rem; text-align:right;
+  }
+  .kpi.kpi--stack .kpi-value{
+    font-variant-numeric: tabular-nums; font-feature-settings:"tnum" 1, "lnum" 1; line-height:1.1;
+  }
+  .kpi.kpi--stack .kpi-value--rel{ font-size: var(--step-2); font-weight:600; color: var(--fg); }
+  .kpi.kpi--stack .kpi-value--abs{ font-size: var(--step--1); color: var(--muted); }
+
+  /* =========================================================
+   * 05 Slider (native <input type="range">)
+   * ======================================================= */
+  .slider{ width:100%; background:transparent; }
+  .slider:focus-visible{ box-shadow:none; }
+  .slider::-webkit-slider-runnable-track{ height:6px; background: var(--border); border-radius:999px; }
+  .slider::-webkit-slider-thumb{
+    appearance:none; width:18px; height:18px; border-radius:50%;
+    background: var(--brand); margin-top:-6px; border:2px solid var(--panel);
+    box-shadow: 0 0 0 1px var(--brand);
+  }
+  .slider::-moz-range-track{ height:6px; background: var(--border); border-radius:999px; }
+  .slider::-moz-range-thumb{
+    width:18px; height:18px; border-radius:50%; background: var(--brand); border:2px solid var(--panel);
+  }
+
+  /* =========================================================
+   * 06 Disclosure / Accordion (details/summary)
+   * ======================================================= */
+  details.controls-group{
+    background: var(--panel);
+    border:1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-1);
+    padding: var(--space-3);
+    transition: box-shadow .15s ease, border-color .15s ease, background .15s ease;
+  }
+  details.controls-group + details.controls-group{ margin-top: var(--space-3); }
+  details.controls-group > summary{
+    position:relative; display:flex; align-items:center; gap:.6rem;
+    cursor:pointer; list-style:none; user-select:none;
+    padding:.1rem .1rem .35rem 1.25rem; margin:0 0 var(--space-3);
+    font-size: var(--step-1); font-weight:600; color: var(--fg);
+  }
+  details.controls-group > summary::marker{ content:""; }      /* native Marker aus */
+  details.controls-group > summary::-webkit-details-marker{ display:none; }
+  details.controls-group > summary::before{
+    content:""; position:absolute; left:.4rem; top:.85rem; width:.55rem; height:.55rem;
+    border-right:2px solid var(--muted); border-bottom:2px solid var(--muted);
+    transform: rotate(-45deg); transition: transform .15s ease, border-color .15s ease;
+  }
+  details.controls-group[open] > summary::before{ transform: rotate(45deg); border-color: var(--border); }
+  details.controls-group[open]{ border-color: var(--border); background: var(--panel); box-shadow: 0 8px 22px rgba(0,0,0,.12); }
+  details.controls-group > summary:focus-visible{ outline:none; box-shadow: var(--focus); border-radius: var(--radius-md); }
+
+  /* =========================================================
+   * 07 Eyebrow + Accent-Line
+   * ======================================================= */
+  .eyebrow{
+    display:block; font-size: var(--step--1); letter-spacing:.04em;
+    text-transform:uppercase; color: var(--muted); margin-bottom:.25rem;
+  }
+  .eyebrow + .accent-line{
+    height:2px; border:0; margin:.35rem 0 var(--space-3);
+    background: color-mix(in srgb, var(--brand) 65%, transparent);
+  }
+
+  /* =========================================================
+   * 08 Inputs (Explore: kompakte Zahleneingaben)
+   * ======================================================= */
+  .ctrl-input{
+    border:1px solid var(--border); border-radius: var(--radius-md);
+    background: color-mix(in srgb, var(--panel) 92%, var(--brand) 8%);
+    padding:.25rem .4rem; font-size:.9rem; text-align:right;
+    font-variant-numeric: tabular-nums; font-feature-settings:"tnum" 1, "lnum" 1;
+  }
+
+  /* =========================================================
+   * 09 Canvas (Chart) – isotrop & responsiv
+   * ======================================================= */
+  canvas.idv-chart{
+    width:100%; height:auto; aspect-ratio:16/9; display:block;
+  }
+
+  /* =========================================================
+   * 10 Lernreise · Preview & Card Polish (opt-in Hover unten)
+   *    – am Ende der Datei belassen
+   * ======================================================= */
+  .lab-preview{
+    margin:.5rem 0 1rem; border-radius:.75rem; overflow:hidden;
+    background: var(--surface-2, #fff);
+    box-shadow:0 2px 6px rgba(0,0,0,.12);
+    aspect-ratio:16/9;                                /* stabil vor Bild-Load */
+  }
+  .lab-preview picture, .lab-preview img{ display:block; width:100%; height:100%; }
+  .lab-preview img{ object-fit:cover; transition: transform .25s ease; }
+
+  /* kleiner Captions-Chip */
+  .lab-preview figcaption{
+    display:inline-block; margin:.5rem auto 0; padding:.25rem .6rem; border-radius:999px;
+    background: var(--surface-3, #eef2f7); color: var(--text-2, #5b6574);
+    font-size:.82rem; line-height:1.35; text-align:center;
+  }
+
+  /* Uni-Dark Tweaks */
+  [data-mode="university"] .lab-preview{
+    background: rgba(255,255,255,.04); box-shadow:0 2px 12px rgba(0,0,0,.35);
+  }
+  [data-mode="university"] .lab-preview figcaption{
+    background: rgba(255,255,255,.08); color: var(--text-muted, #c7d0db);
+  }
+
+  /* Karte: Badges immer unten verankern */
+  .card .lab-badges{ margin-top:auto; }
+  .lab-badges{
+    display:flex; justify-content:center; flex-wrap:wrap; gap:.4rem;
+    margin-top:-.25rem; padding-top:.5rem; border-top:1px solid rgba(255,255,255,.08);
+  }
+
+  /* Microtypografie in 6er-Karten */
+  .cards-6 .card > p{
+    letter-spacing:.01em; line-height:1.45; color: var(--text-2, #5b6574);
+  }
+  [data-mode="university"] .cards-6 .card > p{ color: var(--text-muted, #c7d0db); }
+
+  /* ==== Hover-Lift (opt-in) ========================================= */
+  /* Baseline: KEIN Lift überall */
+  .card:hover{ transform:none; box-shadow:none; }
+
+  /* Opt-in: nur auf Seiten mit data-page = journey | index | about */
+  html[data-page="journey"] .card:hover,
+  html[data-page="index"] .card:hover,
+  html[data-page="about"] .card:hover{
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(0,0,0,.18);
+  }
+
+  /* Bewegungsreduktion respektieren */
+  @media (prefers-reduced-motion: reduce){
+    .card, .lab-preview img{ transition:none !important; }
+  }
+
+  /* Print cleanup */
+  @media print{
+    .lab-preview{ display:none !important; }
+  }
+
+  /* =========================================================
+   * 11 Forms (ehem. contact.css – generische Primitives)
+   * ======================================================= */
+  .form { display: grid; gap: 16px; }
+  label { display: grid; gap: 6px; }
+  label > span { font-weight: 600; }
+
+  input[type="text"],
+  input[type="email"],
+  textarea {
+    appearance: none; font: inherit;
+    padding: 12px 14px;
+    border: 1px solid var(--input-border);
+    border-radius: 12px;
+    background: var(--input-bg);
+    color: inherit;
+  }
+  textarea { min-height: 140px; resize: vertical; }
+
+  input:focus,
+  textarea:focus {
+    outline: 2px solid transparent;
+    box-shadow: 0 0 0 3px var(--ring);
+    border-color: var(--brand);
+  }
+
+  /* small layout helpers often used with forms */
+  .row { display: flex; gap: 12px; align-items: center; }
+  .actions { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+  .hp { display: none; } /* honeypot */
+}
+
+@layer components {
+  /* Zwischenbereich: Desktopzeile entlasten */
+  @media (min-width: 641px) and (max-width: 1023px){
+    .site .primary .nav-bh,
+    .site .primary .nav-lr,
+    .site .primary .nav-about { display: none; }
+  }
+}
+
+@layer components {
+  /* Alle <1024px>: drei Desktop-Links ausblenden */
+  @media (max-width: 1023px){
+    .site .primary .nav-bh,
+    .site .primary .nav-lr,
+    .site .primary .nav-about { display: none !important; }
+  }
+
+  /* Optional: Toggle sicher anzeigen, wenn’s eng wird */
+  @media (max-width: 1023px){
+    .site .idv-actions [data-off-toggle] { display: inline-flex; }
+  }
+
+  /* Ab 1024px: volle Desktop-Navigation */
+  @media (min-width: 1024px){
+    .site .primary { display: flex; gap: var(--space-4); }
+    .site .primary .nav-bh,
+    .site .primary .nav-lr,
+    .site .primary .nav-about { display: inline-flex; }
+    .site .idv-actions [data-off-toggle] { display: none; }
+  }
+}
+
+
+@layer base {
+  html, body {
+    min-width: 360px;   /* Harte Untergrenze für das gesamte Layout */
+  }
+}
