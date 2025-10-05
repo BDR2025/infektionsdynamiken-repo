@@ -27,6 +27,6 @@
   "repo_base_url": "https://repository.infektionsdynamiken.de",
   "engine_cdn_base": "https://cdn.jsdelivr.net/gh/infektionsdynamiken/infektionsdynamiken-engine@main",
 
-  "exclude_dirs": [".git", ".github", "api", "sd_engine"],
+  "exclude_dirs": [".git", ".github", "api"],
   "exclude_globs": ["**/node_modules/**", "**/.git/**", "**/.DS_Store"]
 }
