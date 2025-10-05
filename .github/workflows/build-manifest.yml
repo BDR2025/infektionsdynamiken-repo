@@ -4,7 +4,7 @@ on:
   push:
     branches: [ main, master ]
     paths-ignore:
-      - 'api/manifest.json'   # verhindert CI-Schleife bei Bot-Commits
+      - 'api/manifest.json'
   workflow_dispatch: {}
 
 permissions:
@@ -24,23 +24,17 @@ jobs:
           fetch-depth: 0
           persist-credentials: true
 
-      - name: Checkout engine repo (overlay source)
-        uses: actions/checkout@v4
-        with:
-          repository: infektionsdynamiken/infektionsdynamiken-engine
-          fetch-depth: 0
-          path: sd_engine
+      # ⬇️ Statt actions/checkout auf Fremd-Repo: simples git clone (public, kein Token nötig)
+      - name: Fetch engine repo (public clone)
+        run: |
+          rm -rf sd_engine
+          git clone --depth 1 https://github.com/BDR2025/infektionsdynamiken-engine.git sd_engine
+          ls -la sd_engine | head -n 20
 
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.x'
-
-      - name: Debug workspace (short)
-        run: |
-          echo "Branch=${{ github.ref_name }}"
-          echo "PWD=$(pwd)"
-          find . -maxdepth 2 -type d | sort || true
 
       - name: Generate manifest (overlay engine → 1-2 UID-E)
         env:
@@ -85,6 +79,7 @@ jobs:
             fi
             sleep 2
           done
+
 
 
 
