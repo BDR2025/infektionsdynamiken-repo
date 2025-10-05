@@ -1,0 +1,118 @@
+UID-Intro Runner · Technische Inbetriebnahme
+Voraussetzungen im DOM
+
+Ein Canvas für die Darstellung
+
+<canvas id="intro-canvas"></canvas>
+
+
+Kontext am <html> Element
+
+<html lang="de" data-mode="school" data-coach="ben">
+
+
+Falls data-coach fehlt, wählt der Runner automatisch passend zu Sprache und Modus.
+
+Einbindung
+
+Variante A mit Boot
+Die Intro-Seite lädt den Runner als ES-Modul und anschließend das Boot als klassisches Script. Boot holt sich window.mountIntroSIR und startet ihn.
+
+<script type="module">
+  import * as Run from "/js/minilabs/intro/intro-sir.js";
+  window.mountIntroSIR = Run.mountIntroSIR || Run.default || Run;
+</script>
+<script src="/js/minilabs/intro/intro-boot.js"></script>
+
+
+Variante B ohne Boot
+Direktes Mounting für schnelle Demos oder Tests.
+
+<script type="module">
+  import { mountIntroSIR } from "/js/minilabs/intro/intro-sir.js";
+
+  const canvas = document.getElementById("intro-canvas");
+  const controller = mountIntroSIR({
+    canvas,
+    onUpdate: payload => {
+      // KPI-Werte entgegennehmen und ins UI schreiben
+      // z. B. payload.t, payload.r0, payload.reff, payload.sRel, iRel, rRel
+    },
+    onEnd: () => {
+      // optionaler Hook am Ende der Sequenz
+    }
+  });
+
+  controller.play();   // Startet die Intro-Sequenz
+  // controller.stop(); // Stoppt die Intro-Sequenz
+</script>
+
+API des Runners
+mountIntroSIR(opts) -> Controller
+
+opts.canvas        // HTMLCanvasElement oder CSS-Selector
+opts.onUpdate      // Funktion, erhält pro Tick ein KPI-Payload
+opts.onEnd         // Funktion, wird nach der letzten Etappe aufgerufen
+opts.locale        // optional, überschreibt <html lang>
+opts.mode          // optional, überschreibt data-mode
+opts.coach         // optional, überschreibt data-coach
+
+Controller = {
+  play(): void,
+  stop(): void,
+  isRunning(): boolean
+}
+
+KPI-Payload
+
+Der Runner sendet pro Frame Kennzahlen. Beispiel SIR.
+
+{
+  t:    12,        // Zeit in Tagen als Integer
+  r0:   2.2,       // Basisreproduktionszahl
+  reff: 1.6,       // Effektiver Reproduktionswert
+  sRel: 92.1,      // S in Prozent, wenn in der Etappe sichtbar
+  iRel:  5.4,      // I in Prozent, wenn sichtbar
+  rRel:  2.5       // R in Prozent, wenn sichtbar
+}
+
+
+Wenn eine Kurve in der aktuellen Etappe nicht sichtbar ist, wird ihr Prozentwert nicht mitgeschickt. Modellabhängige Runner liefern zusätzliche Felder wie Peaks, Gleichgewicht oder Impfquoten.
+
+Zusätzlich feuert der Runner ein CustomEvent am window.
+
+window.addEventListener("idv:intro:kpi", e => {
+  const payload = e.detail;
+});
+
+Coach-Varianten aus einem Runner
+
+Der Runner liest lang, data-mode und data-coach und wählt daraus die Sequenz. Die Sequenz definiert Etappen, Dauer, sichtbare Kurven, Wipes und Carry-Over. Es sind keine separaten Dateien nötig. Unterschiedliche Coaches resultieren aus unterschiedlichen Sequenz-Definitionen innerhalb derselben Datei.
+
+Timing und Rendering
+
+Numerik mit festem Integrator Euler
+
+Zeitsteuerung über requestAnimationFrame
+
+SIR bereits fps-unabhängig mit rAF-Delta
+
+Canvas-Rendering ohne Chart-Bibliothek
+
+Häufige Fehlerquellen
+
+Canvas fehlt oder ist 0×0 Pixel. In dem Fall liefert mountIntroSIR einen no-op Controller zurück.
+
+Runner als Modul geladen, aber Boot nicht. Boot ist klassisches Script und erwartet window.mountIntroSIR.
+
+onUpdate vergessen. Dann kommen zwar Events am window an, aber es erscheinen keine KPIs im UI, wenn du ohne Boot arbeitest.
+
+DPI-Unscharf. Stelle sicher, dass das Canvas CSS-Größe hat und der Runner die Device-Pixel-Ratio setzt.
+
+Minimaldiagnose
+
+Prüfe controller.isRunning() nach play().
+
+Lausche auf idv:intro:kpi, um sicherzugehen, dass Ticks laufen.
+
+Öffne DevTools und prüfe canvas.width und canvas.height relativ zur CSS-Größe.

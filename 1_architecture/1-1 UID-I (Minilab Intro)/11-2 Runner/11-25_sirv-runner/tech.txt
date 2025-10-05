@@ -1,0 +1,121 @@
+UID-Intro · SIRV Runner · tech.txt
+
+Zweck
+Der SIRV-Runner spielt eine geführte Intro-Sequenz der Kurven S, I, R, V ab, rechnet deterministisch und liefert pro Frame KPI-Werte an die Oberfläche (Window-Event). School nutzt einen perfekten Impfstoff, University einen leaky Ansatz.
+
+Voraussetzungen im DOM
+
+<canvas id="intro-canvas"> für das Rendering
+
+Optional (ohne Boot): Container für KPI-Decks, z. B. #kpis-comp, #kpis-context
+
+Kontext am <html>: lang, data-mode (school|university), data-coach (ben|mila|chloe|archer)
+
+Einbindung
+
+Mit Boot
+
+Runner als ES-Modul importieren und mountIntroSIRV bereitstellen; Boot hört auf idv:intro:kpi und baut/befüllt die KPI-Decks.
+
+Ohne Boot
+
+mountIntroSIRV({ canvas, onUpdate }) aufrufen und im onUpdate die KPI-Payload ins UI schreiben.
+
+API
+mountIntroSIRV(opts) → Controller
+
+opts.canvas (Element oder Selector)
+
+opts.onUpdate (Callback; wird intern über das Window-Event gespeist)
+
+Rückgabe: { play(), stop(), isRunning() }
+
+Fallback: Fehlt das Canvas, liefert der Runner einen No-Op-Controller und loggt einen Hinweis.
+
+Modell, Numerik, Parameter
+
+SIRV auf normierter Skala N = 1, Integrator: Euler
+
+Defaults: R0=4.0, D=5 (⇒ γ=1/D), β=R0·γ, I0=1e-6, T=175, dt=0.25
+
+Impfung (S→V) wirkt fortlaufend mit Rate ν
+
+School: VE=1.0, ν=0.01, V0=0.00 (perfect vaccine)
+
+University: VE=0.9, ν=0.02, V0=0.10 (leaky)
+
+Leaky vs. Perfect – effektive Suszeptibilität
+
+School: Infektionsfluss nur aus S
+
+University: Seff = S + (1−VE)·V → Geimpfte tragen mit reduzierter Rest-Suszeptibilität zur Transmission bei
+
+Sequenz-Orchestrierung (4 Schritte)
+Vierteilige Partitur pro Coach, mit Dauer, sichtbaren Kurven, Spuren behalten und Wipe:
+
+I+S (kein Wipe) →
+
+R (Spuren von I+S bleiben) →
+
+V (Spuren bleiben) →
+
+S+I+R+V (Wipe vorher, frischer Lauf)
+vaccOn ist semantisch; die Numerik impft kontinuierlich.
+
+KPI-Payload & Event
+
+Pro Frame CustomEvent('idv:intro:kpi', { detail }) am window
+
+Felder (Auszug):
+
+Zeit/Transmission: t (ganzzahliger Tag), r0, reff (= R0·Seff)
+
+Impf-Indikatoren: v (Deckung, %), vc (Herdschwelle), deltaV (= v − vc)
+
+Kompartimente: sRel, iRel, rRel, vRel (alle in %)
+
+Ein übergebenes onUpdate wird an dieses Event gekoppelt
+
+Rendering (Canvas)
+
+DPI-aware Canvas, dezentes Prozent-Grid
+
+Kurvenfarben über CSS-Tokens --c-s, --c-i, --c-r, --c-v (Fallbacks vorhanden)
+
+„Carried“ Kurven voll, „Visible“ bis zum aktuellen Index
+
+X-Achsen-Label sprachabhängig („Tage“/„days“)
+
+Timing / Player
+
+Sequenz-Player mit requestAnimationFrame; Fortschritt = (Anzahl Indizes / Schritt-Dauer)
+
+play() startet die erste Etappe, stop() bricht ab; am Ende der Partitur stoppt der Player automatisch
+
+Die einfache speed/60-Taktung ist FPS-abhängig (für Intros bewusst in Ordnung)
+
+Häufige Fehlerquellen
+
+Canvas-Element fehlt/ID vertauscht → No-Op-Controller, kein Render
+
+KPI-Decks binden falsche Keys (z. B. r statt rRel) → Werte erscheinen nicht
+
+Farbtokens fehlen (z. B. --c-v) → Fallback greift, optisch prüfen
+
+Doppel-Listener (bei wiederholtem Mount ohne Cleanup) → Boot nur einmal montieren
+
+Minimaldiagnose
+
+Konsole: window.addEventListener('idv:intro:kpi', e => console.log(e.detail)) – prüfen, ob rRel/vRel laufen
+
+controller.isRunning() nach play() sollte true liefern
+
+Sequenzwechsel beobachten: Schritt 4 startet mit Wipe, danach laufen alle Kurven gemeinsam
+
+Boot-Abgleich (SIRV)
+
+Oberes Deck: S, I, R, V (feste Reihenfolge)
+
+Unteres Deck: mindestens t und Impfindikatoren (z. B. v, vc, deltaV, optional R_eff)
+
+Binding-Map in Boot: sRel/iRel/rRel/vRel → Kompartiment-Slots; t, r0, reff, v, vc, deltaV → Kontext-Slots
