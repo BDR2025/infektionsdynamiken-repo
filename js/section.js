@@ -1,4 +1,6 @@
 (function(){
+  'use strict';
+
   const MANIFEST_URL = 'api/manifest.json';
   const tree  = document.getElementById('tree');
   const body  = document.getElementById('previewBody');
@@ -37,57 +39,55 @@
     'word-break: inherit'
   ].join(';');
 
- // Externe Links: im neuen Tab öffnen (true) oder im gleichen Tab (false)
-const OPEN_EXTERNAL_IN_NEW_TAB = false;
-const LINK_ATTRS = OPEN_EXTERNAL_IN_NEW_TAB ? ' target="_blank" rel="noopener noreferrer"' : '';
+  // Externe Links: im neuen Tab öffnen (true) oder im gleichen Tab (false)
+  const OPEN_EXTERNAL_IN_NEW_TAB = false;
+  const LINK_ATTRS = OPEN_EXTERNAL_IN_NEW_TAB ? ' target="_blank" rel="noopener noreferrer"' : '';
 
-// --- Linkify: URLs & repo-relative Pfade klickbar machen (sicher) ---
-function linkifySafe(raw) {
-  // 1) http(s)://… URLs
-  const urlRe  = /(https?:\/\/[^\s<>'"]+)/g;
+  // --- Linkify: URLs & repo-relative Pfade klickbar machen (sicher) ---
+  function linkifySafe(raw) {
+    // 1) http(s)://… URLs
+    const urlRe  = /(https?:\/\/[^\s<>'"]+)/g;
+    // 2) nackte Domain → https://… (Whitelist erweiterbar)
+    const bareRe = /(?:^|\s)(repository\.infektionsdynamiken\.de\/[^\s<>'"]+)/g;
+    // 3) repo-relative Pfade (Dateien) → interne Preview-Links
+    const relRe  = /(^|[\s])((?:\.?\/)?(?:[\w\-\/]+)\.(?:txt|md|markdown|rtf|html|json|js|css|pdf|png|jpg|jpeg|gif|webp|svg))/gi;
 
-  // 2) nackte Domain → https://… (Whitelist erweiterbar)
-  const bareRe = /(?:^|\s)(repository\.infektionsdynamiken\.de\/[^\s<>'"]+)/g;
+    // Erst: http(s)://… matchen und Rest sicher escapen
+    let out = '';
+    let last = 0;
+    const pushEsc = (s) => { out += escapeHtml(s); };
 
-  // 3) repo-relative Pfade (Dateien) → interne Preview-Links
-  const relRe  = /(^|[\s])((?:\.?\/)?(?:[\w\-\/]+)\.(?:txt|md|markdown|rtf|html|json|js|css|pdf|png|jpg|jpeg|gif|webp|svg))/gi;
+    raw.replace(urlRe, (m, _url, idx) => {
+      pushEsc(raw.slice(last, idx));
+      out += `<a href="${m}"${LINK_ATTRS}>${escapeHtml(m)}</a>`;
+      last = idx + m.length;
+      return m;
+    });
+    pushEsc(raw.slice(last));
 
-  // Erst: http(s)://… matchen und Rest sicher escapen
-  let out = '';
-  let last = 0;
-  const pushEsc = (s) => { out += escapeHtml(s); };
+    // Danach nackte Domains
+    out = out.replace(bareRe, (full, dom) => {
+      const url = `https://${dom}`;
+      return full.replace(dom, `<a href="${url}"${LINK_ATTRS}>${escapeHtml(dom)}</a>`);
+    });
 
-  raw.replace(urlRe, (m, _url, idx) => {
-    pushEsc(raw.slice(last, idx));
-    out += `<a href="${m}"${LINK_ATTRS}>${escapeHtml(m)}</a>`;
-    last = idx + m.length;
-    return m;
-  });
-  pushEsc(raw.slice(last));
+    // Zum Schluss repo-relative Pfade → interne Preview (immer im Pane)
+    out = out.replace(relRe, (full, lead, rel) => {
+      const trimmed = rel.replace(/^\.\/+/, '');
+      return `${lead}<a href="#" data-preview="${escapeHtml(trimmed)}" title="In der Preview öffnen">${escapeHtml(rel)}</a>`;
+    });
 
-  // Danach nackte Domains
-  out = out.replace(bareRe, (full, dom) => {
-    const url = `https://${dom}`;
-    return full.replace(dom, `<a href="${url}"${LINK_ATTRS}>${escapeHtml(dom)}</a>`);
-  });
+    return out;
+  }
 
-  // Zum Schluss repo-relative Pfade → interne Preview (immer im Pane, niemals neuer Tab)
-  out = out.replace(relRe, (full, lead, rel) => {
-    const trimmed = rel.replace(/^\.\/+/, '');
-    return `${lead}<a href="#" data-preview="${escapeHtml(trimmed)}" title="In der Preview öffnen">${escapeHtml(rel)}</a>`;
-  });
-
-  return out;
-}
-
-
-  // ---------------- README-Handhabung ----------------
+  // README-Handhabung
   const README_REGEX = /^readme\.(?:md|markdown|txt|rtf|html)$/i;
   const README_CANDIDATES = ['README.md','README.markdown','README.txt','README.rtf','README.html'];
 
-  // globaler Manifest-Zugriff
+  // Manifest + Index: virtPath -> { url, origin, ... }
   let MAN = null;
   let TREE_ROOT = {};
+  const URL_INDEX = new Map();
 
   function getSubtreeByPath(rootObj, relPath){
     if(!relPath) return rootObj;
@@ -102,14 +102,11 @@ function linkifySafe(raw) {
 
   function findReadmePathForChildren(nodePath, childrenObj){
     if(!childrenObj || typeof childrenObj !== 'object') return null;
-
-    // 1) Bevorzugte Kandidaten (deterministisch)
     for(const cand of README_CANDIDATES){
       if(childrenObj[cand] && childrenObj[cand].__type === 'file'){
         return (nodePath ? nodePath + '/' : '') + cand;
       }
     }
-    // 2) Fallback: irgendein README.*
     for(const name of Object.keys(childrenObj)){
       if(README_REGEX.test(name) && childrenObj[name]?.__type === 'file'){
         return (nodePath ? nodePath + '/' : '') + name;
@@ -118,7 +115,6 @@ function linkifySafe(raw) {
     return null;
   }
 
-  // ---------------- Aktive Zustände (Datei/Ordner) ----------------
   function clearAllActiveStates(){
     document.querySelectorAll('.tree a').forEach(a => a.classList.remove('file-active'));
     document.querySelectorAll('.tree summary').forEach(s => s.classList.remove('folder-active'));
@@ -128,7 +124,6 @@ function linkifySafe(raw) {
   }
 
   function markActiveFolder(path){
-    // Ordnerzustand „exklusiv“ (Datei- und Ordner-States räumen)
     clearAllActiveStates();
     const sum = Array.from(document.querySelectorAll('.tree summary'))
       .find(s => s.dataset.path === path);
@@ -141,7 +136,6 @@ function linkifySafe(raw) {
   }
 
   function markActiveLink(path){
-    // Nur Dateistatus anpassen; Ordner-Markierung (z. B. Auto-README) NICHT löschen
     clearFileActiveStates();
     const link = Array.from(document.querySelectorAll('.tree a'))
       .find(a => a.getAttribute('href') === path);
@@ -164,14 +158,29 @@ function linkifySafe(raw) {
 
     const readmeFullPath = findReadmePathForChildren(dirPathRel, subtree);
     if(readmeFullPath){
-      // README laden und Ordner markieren (Ordner-Markierung bleibt bestehen)
       openPreview(readmeFullPath);
       markActiveFolder(dirPathRel);
       return true;
     }
-    // kein README → Ordner trotzdem markieren
     markActiveFolder(dirPathRel);
     return false;
+  }
+
+  // -------- Manifest-Index bauen: virtPfad -> Node (mit url/origin) --------
+  function indexSubtree(obj, prefix){
+    Object.keys(obj || {}).forEach(name => {
+      const node = obj[name];
+      const full = prefix ? `${prefix}/${name}` : name;
+      if(node && node.__type === 'file'){
+        URL_INDEX.set(full, node); // node.url vorhanden für Engine-Dateien
+      }else if(node && typeof node === 'object'){
+        indexSubtree(node, full);
+      }
+    });
+  }
+  function urlFor(path){
+    const meta = URL_INDEX.get(path);
+    return (meta && meta.url) ? meta.url : path; // Repo-Dateien weiter lokal ausliefern
   }
 
   // ---------------- Tree-Rendering ----------------
@@ -191,15 +200,14 @@ function linkifySafe(raw) {
         const full = (nodePath ? nodePath + '/' : '') + name;
 
         // README.* NICHT im Tree anzeigen (wir laden es automatisch in der Preview)
-        if (node && node.__type === 'file' && README_REGEX.test(name)) {
-          return;
-        }
+        if (node && node.__type === 'file' && README_REGEX.test(name)) return;
 
         if(node && node.__type === 'file'){
           const div = document.createElement('div');
           div.className = 'file';
           const a = document.createElement('a');
           a.textContent = name;
+          // HREF bleibt der virtuelle Pfad (Deep-Link via #preview)
           a.href = full;
           a.addEventListener('click', e => { e.preventDefault(); setHashPath(full); openPreview(full); });
           div.appendChild(a);
@@ -208,15 +216,9 @@ function linkifySafe(raw) {
           const det = document.createElement('details');
           const sm = document.createElement('summary');
           sm.textContent = name;
-          sm.dataset.path = full; // Ordnerpfad merken
+          sm.dataset.path = full;
           sm.addEventListener('click', () => {
-            // Browser darf zuerst den open/close-State umschalten …
-            setTimeout(() => {
-              // … dann nur beim AUFKLAPPEN Auto-README laden + Ordner markieren
-              if (det.open) {
-                tryAutoLoadReadmeForPath(full);
-              }
-            }, 0);
+            setTimeout(() => { if (det.open) tryAutoLoadReadmeForPath(full); }, 0);
           });
           det.appendChild(sm);
           parent.appendChild(det);
@@ -227,20 +229,24 @@ function linkifySafe(raw) {
     addNodes(root, ALLOWED, subtree);
   }
 
+  // ---------------- Preview ----------------
   async function openPreview(path){
     title.textContent = 'Lädt…';
     body.textContent = 'Bitte warten…';
-    dl.setAttribute('href', path);
+
     const e = ext(path);
+    const effectiveURL = urlFor(path);   // <— Kern: CDN-URL aus Manifest nutzen, wenn vorhanden
+    dl.setAttribute('href', effectiveURL);
+
     try{
       if(isImage(e)){
         title.textContent = path;
-        body.innerHTML = '<img alt="Vorschau" style="max-width:100%;height:auto" src="'+path+'">';
+        body.innerHTML = '<img alt="Vorschau" style="max-width:100%;height:auto" src="'+effectiveURL+'">';
         markActiveLink(path); return;
       }
       if(isPdf(e)){
         title.textContent = path;
-        body.innerHTML = '<object data="'+path+'" type="application/pdf" width="100%" height="600">PDF kann nicht eingebettet werden. <a href="'+path+'" target="_blank" rel="noopener">Im neuen Tab öffnen</a>.</object>';
+        body.innerHTML = '<object data="'+effectiveURL+'" type="application/pdf" width="100%" height="600">PDF kann nicht eingebettet werden. <a href="'+effectiveURL+'" target="_blank" rel="noopener">Im neuen Tab öffnen</a>.</object>';
         markActiveLink(path); return;
       }
       if(isBinaryLikely(e)){
@@ -248,12 +254,11 @@ function linkifySafe(raw) {
         body.innerHTML = '<p>Nicht darstellbarer Dateityp. Bitte über den Download-Button laden.</p>';
         markActiveLink(path); return;
       }
-      const resp = await fetch(path, {cache:'no-cache'});
+
+      const resp = await fetch(effectiveURL, {cache:'no-cache'});
       if(!resp.ok){ title.textContent='Fehler'; body.textContent='Datei nicht gefunden oder nicht lesbar.'; return; }
       const text = await resp.text();
       title.textContent = path;
-
-      // ⬇️ Linkify aktiv für Text/README
       body.innerHTML = '<pre class="readme" style="'+PRE_STYLE+'"><code style="'+CODE_STYLE+'">'+linkifySafe(text)+'</code></pre>';
       markActiveLink(path);
     }catch(err){
@@ -273,35 +278,6 @@ function linkifySafe(raw) {
     }
   }
 
-  async function boot(){
-    try{
-      const resp = await fetch(MANIFEST_URL + `?v=${Date.now()}`, {cache:'no-cache'});
-      if(!resp.ok) throw new Error('Manifest nicht gefunden');
-      MAN = await resp.json();
-
-      // Wurzel (nur der erlaubte Teilbaum)
-      TREE_ROOT = (MAN.tree && MAN.tree[ALLOWED]) ? MAN.tree[ALLOWED] : {};
-      buildTree(TREE_ROOT);
-
-      const p = getHashPath();
-      if(p){
-        openPreview(p);
-      }else{
-        // Kein Deep-Link: README des Root-Ordners automatisch anzeigen (falls vorhanden)
-        tryAutoLoadReadmeForPath(ALLOWED);
-      }
-    }catch(e){
-      tree.textContent = 'Manifest konnte nicht geladen werden. Bitte GitHub Action aktivieren oder manifest.json bereitstellen.';
-      console.error(e);
-    }
-  }
-
-  // Drucken
-  printBtn?.addEventListener('click', ()=> window.print());
-
-  // Hash-Änderungen (Deep-Link)
-  window.addEventListener('hashchange', ()=>{ const p=getHashPath(); if(p) openPreview(p); });
-
   // Delegiertes Klicken für interne Preview-Links aus linkifySafe()
   document.addEventListener('click', (e) => {
     const a = e.target.closest('a[data-preview]');
@@ -311,6 +287,32 @@ function linkifySafe(raw) {
     if (p) { setHashPath(p); openPreview(p); }
   });
 
+  // Drucken
+  printBtn?.addEventListener('click', ()=> window.print());
+
+  // Hash-Änderungen (Deep-Link)
+  window.addEventListener('hashchange', ()=>{ const p=getHashPath(); if(p) openPreview(p); });
+
   // Boot
+  async function boot(){
+    try{
+      const resp = await fetch(MANIFEST_URL + `?v=${Date.now()}`, {cache:'no-cache'});
+      if(!resp.ok) throw new Error('Manifest nicht gefunden');
+      MAN = await resp.json();
+
+      // Teilbaum & Index
+      TREE_ROOT = (MAN.tree && MAN.tree[ALLOWED]) ? MAN.tree[ALLOWED] : {};
+      indexSubtree(TREE_ROOT, ALLOWED);
+      buildTree(TREE_ROOT);
+
+      const p = getHashPath();
+      if(p){ openPreview(p); }
+      else { tryAutoLoadReadmeForPath(ALLOWED); }
+    }catch(e){
+      tree.textContent = 'Manifest konnte nicht geladen werden. Bitte GitHub Action aktivieren oder manifest.json bereitstellen.';
+      console.error(e);
+    }
+  }
   window.addEventListener('DOMContentLoaded', boot);
 })();
+
