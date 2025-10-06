@@ -1,86 +1,188 @@
 <!doctype html>
-<html lang="de" data-mode="school" data-page="repo" data-coach="ben">
-  <head>
+<html lang="de" data-mode="university" data-model="SEIR" data-app="uid-engine">
+  <!--
+    File:      https://engine.infektionsdynamiken.de/index.html
+    Project:   Understanding Infection Dynamics · UID-Engine
+    Role:      Einstiegspunkt (App-Shell) mit externer Import-Map & Orchestrator
+    License:   CC BY 4.0
+
+    Updated:   2025-10-06
+    Version:   1.5.3
+    Changelog:
+      - v1.5.3  Gemeinsame .page-Hülle für Header + Main; HTML-Hygiene & Einrückungen.
+      - v1.5.2  Early-Access Header & Banner statisch integriert; /early-access/early-access.css verlinkt.
+      - v1.5.1  Legacy-Header <header.widget-header> entfernt; Collapse-Adjazenz über .uidw-header sichergestellt.
+      - v1.5.0  Demo-2-Layout reaktiviert: d2-grid, d2-left/right, data-widget-enabled auf <article>, demo2.css eingebunden.
+      - v1.4.3  Legacy-Styles aus 12-43_css (ohne KPI) wieder eingebunden.
+      - v1.4.2  MathJax: nur Preloads (uid-mathjax.js, tex-chtml-full.js); kein direkter Loader im <head>.
+      - v1.4.1  MathJax-Readiness: Preloads ergänzt.
+      - v1.4.0  Widget-Hosts ergänzt (chart/kpi/gridwave/state visuals/params/formulas/leq).
+      - v1.3.0  Import-Map in <head> + Preloads + Favicon-Stub.
+  -->
+ <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Infektionsdynamiken – Repository (DE)</title>
-    <link rel="icon" href="favicon.ico" sizes="any">
-    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="favicon-192.png">
-    <link rel="stylesheet" href="css/tokens.css" />
-    <link rel="stylesheet" href="css/base.css" />
-    <link rel="stylesheet" href="css/layout.css" />
-    <link rel="stylesheet" href="css/components.css" />
-    <link rel="stylesheet" href="css/patterns.css" />
-    <link rel="stylesheet" href="css/pages.css" />
-    <link rel="stylesheet" href="css/landing.css" />
-    <style>
-@media (max-width: 1000px){ .landing-header .nav-links{ display:none; } }
-.wordmark-short{ display:none; }
-@media (max-width:680px){ .wordmark-long{ display:none; } .wordmark-short{ display:block; } }
-@media (max-width:499.98px){ .wordmark-long,.wordmark-short{ display:none; } }
-.grid-2-2{ display:grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap:16px; }
-@media (max-width:720px){ .grid-2-2{ grid-template-columns: 1fr; } }
-    </style>
+    <title>UID-Engine</title>
+
+    <!-- Import-Map muss vor dem ersten Module-Script geparst sein -->
+    <script type="importmap" src="/uid-e_v1/importmap.json"></script>
+
+    <!-- 12-43_css · Legacy-Compat (ohne KPI) -->
+    <link rel="stylesheet" href="/uid-e_v1/12-4_support/12-43_css/tokens.css" />
+    <link rel="stylesheet" href="/uid-e_v1/12-4_support/12-43_css/uid-core.css" />
+    <link rel="stylesheet" href="/uid-e_v1/12-4_support/12-43_css/uid-widgets-collapse.css" />
+
+    <!-- Demo-2 Layout (Cards, Grid, Spacing) -->
+    <link rel="stylesheet" href="/uid-e_v1/12-4_support/12-43_css/demo2.css" />
+
+    <!-- Early-Access Header/Banner (Root-Ordner) -->
+    <link rel="stylesheet" href="/early-access/early-access.css" />
+
+    <!-- Preloads: Hot-Path-Module & MathJax (lokal, performance-first) -->
+    <link rel="modulepreload" href="/uid-e_v1/12-4_support/12-41_boot/index.js" />
+    <link rel="modulepreload" href="/uid-e_v1/12-1_base/index.js" />
+    <link rel="modulepreload" href="/uid-e_v1/12-4_support/12-44_js/uid-mathjax.js" />
+    <link rel="preload" as="script" href="/uid-e_v1/12-4_support/12-44_js/tex-chtml-full.js" />
+
+    <!-- Favicon-Stub (unterdrückt 404) -->
+    <link rel="icon" href="data:,">
   </head>
-  <body id="top" class="repo">
-    <!-- Header (Landing-Style, eingekürzt) -->
-    <header class="landing-header" role="banner">
-      <div class="container bar">
-        <a href="index.html" class="brand" aria-label="Infektionsdynamiken.de — Startseite">
-          <img class="brand-icon" src="assets/icons/logo-id.svg" alt="Infektionsdynamiken.de" />
-          <div class="wordmark wordmark-long">
-            <div class="brand-title">Infektionsdynamiken verstehen</div>
-            <div class="brand-claim">Repository · transparent &amp; zugänglich</div>
+  <body>
+    <!-- Gemeinsame Seitenhülle: identische Max-Breite & Side-Pads für Header + Main -->
+    <div class="page">
+      <!-- Early-Access Header (Landing-Look, statisch) -->
+      <header class="ea-wrap" role="banner" aria-label="Seitentitel & Navigation">
+        <div class="ea-header">
+          <!-- Brand -->
+          <div class="ea-brand">
+            <div class="ea-logo" aria-hidden="true">ID</div>
+            <div class="ea-titles">
+              <div class="ea-title">Infektionsdynamiken verstehen</div>
+              <div class="ea-sub">UID-Explore Engine v1 · Early Access</div>
+            </div>
           </div>
-          <div class="wordmark wordmark-short">
-            <div class="brand-title">Infektionsdynamiken.de</div>
-            <div class="brand-claim">Repository</div>
-          </div>
-        </a>
-        <nav class="landing-nav" aria-label="Hauptnavigation Repository">
-          <div class="nav-links">
-            <a href="architektur.html">Architektur</a>
-            <a href="publikationen.html">Publikationen</a>
-            <a href="lehre.html">Lehre</a>
-            <a href="https://infektionsdynamiken.de/#legal">Rechtliches</a>
-          </div>
-        </nav>
-      </div>
-    </header>
 
-    <main>
-      <section class="section container">
-        <article class="card pad">
-          <span class="eyebrow">Start</span>
-          <hr class="accent-line" />
-          <h1>Repository · Dispatcher</h1>
-          <p class="lead">Wähle einen Bereich:</p>
-          <div class="grid-2-2 mt-4">
-            <article class="card">
-              <h3>Systemarchitektur</h3>
-              <p>Intro (UID-I), Explore (UID-E), Challenge (UID-C), Module.</p>
-              <p><a class="btn" href="architektur.html">Öffnen</a></p>
-            </article>
-            <article class="card">
-              <h3>Publikationen</h3>
-              <p>Papers, Vorträge, Preprints.</p>
-              <p><a class="btn" href="publikationen.html">Öffnen</a></p>
-            </article>
-            <article class="card">
-              <h3>Lehre</h3>
-              <p>Unterlagen, Aufgaben, Bibliografie.</p>
-              <p><a class="btn" href="lehre.html">Öffnen</a></p>
-            </article>
-          </div>
-        </article>
-      </section>
-    </main>
+          <!-- Nav zentriert -->
+          <nav class="ea-nav" aria-label="Navigation">
+            <a class="ea-link ea-link-landing" href="https://infektionsdynamiken.de" target="_blank" rel="noopener noreferrer">Landing</a>
+            <a class="ea-link ea-link-repo" href="https://repository.infektionsdynamiken.de" target="_blank" rel="noopener noreferrer">Repository</a>
+            <a class="ea-link ea-link-legal" href="https://infektionsdynamiken.de/#legal" target="_blank" rel="noopener noreferrer">Rechtliches</a>
+          </nav>
 
-    <footer class="landing-footer">
-      <div class="container">
-        <p class="muted">© CC BY 4.0 · Infektionsdynamiken – Repository (Preview). Keine Cookies.</p>
-      </div>
-    </footer>
+          <!-- Controls rechts (ausgegraut, ohne Funktion) -->
+          <div class="ea-controls">
+            <span class="ea-chip is-disabled" aria-disabled="true" title="Modusumschalter kommt später">S</span>
+            <span class="ea-chip is-disabled" aria-disabled="true" title="Modusumschalter kommt später">U</span>
+            <span class="ea-icon is-disabled" aria-disabled="true" title="Sprache folgt">🌐</span>
+          </div>
+        </div>
+
+        <!-- Banner: wähle theme-s (grün) oder theme-e (gelb) -->
+        <div class="ea-banner theme-e" role="status" aria-live="polite">
+          <strong>Early Access</strong> — Öffentliche Vorschau. Diese Demo zeigt den aktuellen Arbeitsstand der UID-Engine.
+          Funktionen &amp; Performance entwickeln sich noch. <a href="mailto:info@infektionsdynamiken.de">Feedback</a> willkommen.
+        </div>
+      </header>
+
+      <!-- App-Shell -->
+      <main id="app" class="d2-grid" data-demo="2">
+        <!-- LINKE SPALTE (Chart → KPI → State Visuals → GridWave → LEQ) -->
+        <div class="d2-left">
+          <!-- CHART -->
+          <section id="app-chart" data-widget="chart">
+            <article id="chart-widget" class="widget widget-chart" data-widget-enabled="true">
+              <div class="widget-body">
+                <div id="chart-host" aria-label="Chart"></div>
+              </div>
+            </article>
+          </section>
+
+          <!-- KPI (kompartimente + live) – Styling per JS; kein KPI-CSS -->
+          <section id="app-kpi" data-widget="kpi">
+            <article id="kpi-widget" class="widget widget-kpi" data-widget-enabled="true">
+              <div class="widget-body">
+                <div id="kpi-comp" class="kpi-deck" aria-label="KPIs (Kompartimente)"></div>
+                <div id="kpi-live" class="kpi-deck" aria-label="KPIs (live)"></div>
+              </div>
+            </article>
+          </section>
+
+          <!-- VISUAL TOOLS (State Visuals + GridWave) -->
+          <section id="app-vt" data-widget="vt">
+            <section class="d2-visuals">
+              <!-- State Visuals -->
+              <article id="sv-widget" class="widget" data-widget-enabled="true">
+                <div class="widget-body">
+                  <div id="sv-host" class="square-host" aria-label="State Visuals"></div>
+                  <!-- optionaler Legacy-Host, falls alte Module ihn suchen -->
+                  <div id="vt-host" class="square-host" hidden></div>
+                </div>
+              </article>
+
+              <!-- GridWave -->
+              <article id="gw-widget" class="widget" data-widget-enabled="true">
+                <div class="widget-body">
+                  <div id="gw-host" class="square-host" aria-label="GridWave">
+                    <div class="muted" id="gw-fallback" hidden>GridWave ist optional und derzeit nicht geladen</div>
+                  </div>
+                </div>
+              </article>
+            </section>
+          </section>
+
+          <!-- LEQ (Living Equation) -->
+          <section id="app-leq" data-widget="leq">
+            <article id="core-equation-widget" class="widget" data-widget-enabled="true" data-experimental="true">
+              <div class="widget-body">
+                <div id="core-equation" data-widget-id="core-equation"></div>
+              </div>
+            </article>
+          </section>
+        </div>
+
+        <!-- RECHTE SPALTE (Params klassisch → Formeln → Key KPIs) -->
+        <div class="d2-right">
+          <!-- PARAMS (klassisch) -->
+          <section id="app-params" data-widget="params">
+            <article id="params-widget" class="widget" data-widget-enabled="true">
+              <div class="widget-body">
+                <div id="params-host" aria-label="Parameter (klassisch)"></div>
+              </div>
+            </article>
+          </section>
+
+          <!-- PARAMS (Formeln) -->
+          <section id="app-formulas" data-widget="formulas">
+            <article
+              id="params-formulas-widget"
+              class="widget"
+              data-widget-enabled="true"
+              data-pt-compact="1"
+              data-pt-flat="1"
+              data-pt-show-sigma="auto"
+              data-pt-order="D,R0,beta,gamma,sigma,beta_eff,R_eff_t,R_eff_0"
+            >
+              <div class="widget-body">
+                <div id="params-formulas-host" aria-label="Parameter (Formeln)"></div>
+              </div>
+            </article>
+          </section>
+
+          <!-- Key KPIs (statisch) -->
+          <section>
+            <article id="kpi-static-widget" class="widget" data-widget-enabled="true">
+              <div class="widget-body">
+                <div id="kpi-static" class="kpi-deck" aria-label="KPIs (static)"></div>
+              </div>
+            </article>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <noscript>Für die UID-Engine ist JavaScript erforderlich. Bitte JS aktivieren.</noscript>
+
+    <!-- Einziger Startpunkt -->
+    <script type="module" src="/uid-e_v1/orchestrator.js"></script>
   </body>
 </html>
