@@ -13,7 +13,7 @@
   ],
 
   "repo_base_url": "https://repository.infektionsdynamiken.de",
-  "engine_cdn_base": "https://cdn.jsdelivr.net/gh/BDR2025/infektionsdynamiken-engine@main",
+  "engine_cdn_base": "https://cdn.jsdelivr.net/gh/BDR2025/infektionsdynamiken-engine@3514215",
 
   "exclude_dirs": [".git", ".github", "api"],
   "exclude_globs": ["**/node_modules/**", "**/.git/**", "**/.DS_Store"],
