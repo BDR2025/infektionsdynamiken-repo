@@ -1,249 +1,447 @@
 (function(){
   'use strict';
 
+  // ------------------------------
+  // DOM references
+  // ------------------------------
   const MANIFEST_URL = 'api/manifest.json';
-  const ALLOWED = (window.ALLOWED_ROOT || '').replace(/\/+$/, '');
-
-  // UI
   const tree       = document.getElementById('tree');
   const body       = document.getElementById('previewBody');
   const title      = document.getElementById('previewTitle');
   const dl         = document.getElementById('downloadBtn');
   const printBtn   = document.getElementById('printBtn');
-  document.getElementById('expandAll')?.addEventListener('click', () => tree.querySelectorAll('details').forEach(d=>d.open=true));
-  document.getElementById('collapseAll')?.addEventListener('click', () => tree.querySelectorAll('details').forEach(d=>d.open=false));
+  const ALLOWED    = (window.ALLOWED_ROOT || '').replace(/\/+$/,'');
 
+  const expandBtn   = document.getElementById('expandAll');
+  const collapseBtn = document.getElementById('collapseAll');
+
+  // During mass toggle (expand/collapse all) we don't want to auto-open previews
+  let BULK_TOGGLE = false;
+
+  // ------------------------------
   // Utils
-  const PRE_STYLE  = 'white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;max-width:100%;box-sizing:border-box;margin:0';
-  const CODE_STYLE = 'display:block;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.95rem;line-height:1.4;white-space:inherit;overflow-wrap:inherit;word-break:inherit';
-
-  const escapeHtml = s => s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const ext        = p => { const m=/\.([a-z0-9]+)(?:$|\?)/i.exec(p||''); return m?m[1].toLowerCase():''; };
-  const isImg      = e => ['png','jpg','jpeg','gif','webp','avif','svg'].includes(e);
-  const isPdf      = e => e==='pdf';
-  const isBin      = e => ['zip','7z','rar','bin','exe','dll','wasm'].includes(e);
-
-  // Manifest-Index: virt -> node {url, origin, ...}
-  let MAN = null;
-  let TREE_ROOT = {};
-  const URL_INDEX = new Map();
-
-  function indexSubtree(obj, prefix){
-    Object.keys(obj||{}).forEach(name=>{
-      const node = obj[name];
-      const full = prefix ? `${prefix}/${name}` : name;
-      if(node && node.__type==='file') URL_INDEX.set(full, node);
-      else if(node && typeof node==='object') indexSubtree(node, full);
-    });
+  // ------------------------------
+  function escapeHtml(s){
+    return s.replace(/[&<>"']/g, c => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    })[c]);
   }
-  const urlFor = (virt) => {
-    const meta = URL_INDEX.get(virt);
-    return (meta && meta.url) ? meta.url : virt; // Repo-Dateien lokal, Engine-Dateien via CDN
-  };
-
-  // Pfad-Resolver (für ModuleMap/Kurzpfade)
-  function normalize(parts){
-    const out=[];
-    for(const p of parts){
-      if(!p || p=='.') continue;
-      if(p==='..') out.pop(); else out.push(p);
+  function ext(path){
+    const m = /\.([a-z0-9]+)(?:$|\?)/i.exec(path);
+    return m ? m[1].toLowerCase() : '';
+  }
+  function basename(path){
+    const m = /([^\/?#]+)(?:[?#].*)?$/.exec(path);
+    return m ? m[1] : path;
+  }
+  function dirname(path){
+    const i = path.lastIndexOf('/');
+    return i >= 0 ? path.slice(0, i) : '';
+  }
+  function joinPath(a, b){
+    if (!a) return b.replace(/^\/+/,''); // root join
+    if (!b) return a;
+    if (b.startsWith('/')) return b.replace(/^\/+/,'');
+    const parts = (a + '/' + b).split('/');
+    const stack = [];
+    for (const p of parts){
+      if (p === '' || p === '.') continue;
+      if (p === '..'){ stack.pop(); continue; }
+      stack.push(p);
     }
+    return stack.join('/');
+  }
+  function setHashPath(p){
+    const h = '#preview=' + encodeURIComponent(p);
+    if (location.hash !== h) location.hash = h; // triggers hashchange
+  }
+  function getHashPath(){
+    const m = /[#&]preview=([^&]+)/.exec(location.hash);
+    return m ? decodeURIComponent(m[1]) : '';
+  }
+
+  // ------------------------------
+  // Linkify (safe): URLs & repo-relative file paths
+  // ------------------------------
+  const OPEN_EXTERNAL_IN_NEW_TAB = false;
+  const LINK_ATTRS = OPEN_EXTERNAL_IN_NEW_TAB ? ' target="_blank" rel="noopener noreferrer"' : '';
+
+  // file types that we treat as internal preview candidates
+  const LINKIFY_FILE_EXT = ['txt','md','markdown','rtf','html','json','js','css','pdf','png','jpg','jpeg','gif','webp','svg'];
+
+  function linkifySafe(raw, baseDir){
+    // We first escape the raw, then inject anchors.
+    let out = escapeHtml(raw);
+
+    // 1) http(s):// URLs
+    out = out.replace(/(https?:\/\/[^\s<>"']+)/g, (m) => {
+      const url = m; // already escaped context
+      return `<a href="${url}"${LINK_ATTRS}>${url}</a>`;
+    });
+
+    // 2) naked domain we know -> https://…
+    out = out.replace(/(?:^|\s)(repository\.infektionsdynamiken\.de\/[^\s<>"']+)/g, (m, p1) => {
+      const url = 'https://' + p1;
+      return m.replace(p1, `<a href="${url}"${LINK_ATTRS}>${p1}</a>`);
+    });
+
+    // 3) repo-relative file paths → internal preview links
+    out = out.replace(/(^|[\s])((?:\.{0,2}\/)?(?:[\w\-\/]+)\.(?:txt|md|markdown|rtf|html|json|js|css|pdf|png|jpg|jpeg|gif|webp|svg))/gi,
+      (all, lead, rel) => {
+        const target = resolvePreviewTarget(rel, baseDir);
+        return `${lead}<a href="#preview=${encodeURIComponent(target)}" data-preview="${escapeHtml(target)}">${escapeHtml(rel)}</a>`;
+      });
+
     return out;
   }
-  function resolveTokenToVirtPath(token, currentVirt){
-    // absolute Engine-Kanonik: /uid-e_v1/...  (inkl. /uid/ -> map)
-    if(/^\/uid(?:-e_v1)?\//i.test(token)){
-      token = token.replace(/^\/uid\//i, '/uid-e_v1/');           // Alias akzeptieren
-      // Anker: alles bis zum /uid-e_v1/ der aktuellen Datei
-      const idx = currentVirt.toLowerCase().indexOf('/uid-e_v1/');
-      if(idx===-1) return null;
-      const prefix = currentVirt.slice(0, idx+('/uid-e_v1').length); // z.B. ".../1-2 UID e-minilab-explorer/uid-e_v1"
-      const rest   = token.replace(/^\/uid-e_v1\/?/i,'');
-      return (prefix + '/' + rest).replace(/^\/+/,'');
-    }
-    // absolute Repo: /1_architecture/...
-    if(/^\/1_architecture\//i.test(token)){
-      return token.replace(/^\/+/,'');
-    }
-    // absolute (andere) – als Repo-virt interpretieren
-    if(token.startsWith('/')){
-      return token.replace(/^\/+/,'');
-    }
-    // relativ: bezogen auf Verzeichnis der aktuellen Datei
-    const baseParts = currentVirt.split('/'); baseParts.pop();
-    const relParts  = token.split('/');
-    return normalize([...baseParts, ...relParts]).join('/');
+
+  function resolvePreviewTarget(href, baseDir){
+    // absolute to allowed root
+    if (href.startsWith('/')) return href.replace(/^\/+/,'');
+    // relative to current file's directory
+    return joinPath(baseDir || '', href);
   }
 
-  // Linkify + Kopfzeile „* File:“ + ModuleMap
-  function renderAnnotated(text, currentVirt, thisLiveURL){
-    const lines = text.split(/\r?\n/);
-    // Engine-Anker (Präfix bis /uid-e_v1)
-    const engineIdx = currentVirt.toLowerCase().indexOf('/uid-e_v1/');
-    const enginePrefix = engineIdx>=0 ? currentVirt.slice(0, engineIdx+('/uid-e_v1').length) : null;
+  // ------------------------------
+  // Render helpers for text preview
+  // ------------------------------
+  const PRE_STYLE = [
+    'white-space: pre-wrap',
+    'overflow-wrap: anywhere',
+    'word-break: break-word',
+    'max-width: 100%',
+    'box-sizing: border-box',
+    'margin: 0'
+  ].join(';');
+  const CODE_STYLE = [
+    'display: block',
+    'font-family: ui-monospace, Menlo, Consolas, monospace',
+    'font-size: 0.95rem',
+    'line-height: 1.4',
+    'white-space: inherit',
+    'overflow-wrap: inherit',
+    'word-break: inherit'
+  ].join(';');
 
-    const tokenRe = /((?:\.\.?\/)?(?:[\w\-().]+\/)*[\w\-().]+\.(?:js|css|mjs|json|md|markdown|txt|html|pdf|png|jpg|jpeg|gif|webp|svg))/g;
+  // ------------------------------
+  // README handling
+  // ------------------------------
+  const README_REGEX = /^(?:readme|liesmich|lesemich)(?:[._-][\w-]+)?\.(?:md|markdown|txt|rtf|html)$/i;
+  const README_CANDIDATES = [
+    'README.md','README.markdown','README.txt','README.rtf','README.html',
+    'README_de.md','LIESMICH.md','LESE_MICH.md'
+  ];
+  const isReadmeName = (name) => README_REGEX.test(name);
 
-    let html = '';
-    for(const raw of lines){
-      // 1) * File: …  -> anklickbar (öffnet die Live-Datei)
-      const mFile = raw.match(/^\s*\*\s*File:\s*(\S+)/i);
-      if(mFile){
-        const shown = mFile[1].replace(/^\/uid\//i, '/uid-e_v1/'); // Alias zeigen wie Kanon
-        const left  = escapeHtml(raw.slice(0, mFile.index)) + escapeHtml(raw.slice(mFile.index, mFile.index + mFile[0].length - mFile[1].length));
-        const link  = `<a href="${thisLiveURL}" target="_blank" rel="noopener noreferrer">${escapeHtml(shown)}</a>`;
-        html += left + link + '\n';
-        continue;
+  // ------------------------------
+  // Manifest access
+  // ------------------------------
+  let TREE_ROOT = {};       // manifest.tree
+  let MANIFEST = null;      // whole manifest (optional)
+
+  function getSubtreeByPath(rootObj, relPath){
+    if (!relPath) return rootObj;
+    const parts = relPath.split('/').filter(Boolean);
+    let node = rootObj;
+    for (const p of parts){
+      if (!node || typeof node !== 'object') return null;
+      node = node[p];
+    }
+    return node;
+  }
+
+  function getNodeByPath(pathRel){
+    const dir = dirname(pathRel);
+    const name = basename(pathRel);
+    const subtree = getSubtreeByPath(TREE_ROOT, dir);
+    if (!subtree || typeof subtree !== 'object') return null;
+    const node = subtree[name];
+    return node && typeof node === 'object' ? node : null;
+  }
+
+  function findReadmePathForChildren(nodePath, childrenObj){
+    if (!childrenObj || typeof childrenObj !== 'object') return null;
+    // 1) preferred list (deterministic selection)
+    for (const cand of README_CANDIDATES){
+      if (childrenObj[cand] && childrenObj[cand].__type === 'file'){
+        return (nodePath ? nodePath + '/' : '') + cand;
       }
-
-      // 2) sonst: linkify Tokens (relativ/absolut) → Preview-Links
-      let esc = escapeHtml(raw);
-      esc = esc.replace(tokenRe, (_m)=>{
-        const token = _m;            // bereits „esc“ – hier ok, weil RegEx nur ASCII-Symbole nutzt
-        const data  = token;         // roher Text (rel/abs)
-        return `<a href="#" data-token="${escapeHtml(data)}" title="In der Vorschau öffnen">${escapeHtml(token)}</a>`;
-      });
-
-      // 3) http(s):// URLs klickbar (extern)
-      esc = esc.replace(/(https?:\/\/[^\s<>'"]+)/g, (m)=>{
-        return `<a href="${m}" target="_blank" rel="noopener noreferrer">${escapeHtml(m)}</a>`;
-      });
-
-      html += esc + '\n';
     }
-
-    // Delegiertes Klicken: data-token → virtuellen Pfad auflösen → Preview öffnen
-    requestAnimationFrame(()=>{
-      body.querySelectorAll('a[data-token]').forEach(a=>{
-        a.addEventListener('click', (e)=>{
-          e.preventDefault();
-          const token = a.getAttribute('data-token');
-          const virt  = resolveTokenToVirtPath(token, currentVirt);
-          if(virt){ setHashPath(virt); openPreview(virt); }
-        });
-      });
-    });
-
-    return html;
+    // 2) fallback by regex
+    for (const name of Object.keys(childrenObj)){
+      if (isReadmeName(name) && childrenObj[name]?.__type === 'file'){
+        return (nodePath ? nodePath + '/' : '') + name;
+      }
+    }
+    return null;
   }
 
-  // Tree
-  function buildTree(subtree){
-    tree.textContent='';
-    const root = document.createElement('details');
-    root.open = true;
-    const sum = document.createElement('summary');
-    sum.textContent = ALLOWED || 'repo';
-    sum.dataset.path = ALLOWED || '';
-    root.appendChild(sum);
-    tree.appendChild(root);
+  // ------------------------------
+  // Tree building
+  // ------------------------------
+  function buildTree(rootEl, subtree, basePath){
+    // clean
+    rootEl.textContent = '';
 
-    const add = (parent, nodePath, children)=>{
-      Object.keys(children).sort().forEach(name=>{
-        const node = children[name];
-        const full = (nodePath ? nodePath + '/' : '') + name;
+    function addNodes(parent, currentPath, obj){
+      const names = Object.keys(obj || {});
+      // sort: directories first, then files, alphabetically
+      names.sort((a,b)=>{
+        const A = obj[a]?.__type === 'file' ? 1 : 0;
+        const B = obj[b]?.__type === 'file' ? 1 : 0;
+        if (A !== B) return A - B;
+        return a.localeCompare(b, 'de', {numeric:true, sensitivity:'base'});
+      });
 
-        if(node && node.__type==='file'){
-          const div = document.createElement('div'); div.className='file';
-          const a = document.createElement('a'); a.textContent=name; a.href=full;
-          a.addEventListener('click', e=>{ e.preventDefault(); setHashPath(full); openPreview(full); });
-          div.appendChild(a); parent.appendChild(div);
-        }else{
-          const det = document.createElement('details'); const sm=document.createElement('summary');
-          sm.textContent = name; sm.dataset.path=full;
-          det.appendChild(sm); parent.appendChild(det);
-          add(det, full, node);
+      for (const name of names){
+        const node = obj[name];
+        const full = currentPath ? (currentPath + '/' + name) : name;
+
+        // skip README files in the tree
+        if (node && node.__type === 'file' && isReadmeName(name)){
+          continue;
         }
-      });
-    };
-    add(root, ALLOWED, subtree);
+
+        if (node && node.__type === 'file'){
+          const div = document.createElement('div');
+          div.className = 'file';
+          const a = document.createElement('a');
+          a.textContent = name;
+          a.href = '#preview=' + encodeURIComponent(full);
+          a.dataset.path = full;
+          a.addEventListener('click', (e) => {
+            e.preventDefault();
+            setHashPath(full);
+            openPreview(full);
+          });
+          div.appendChild(a);
+          parent.appendChild(div);
+        } else {
+          // directory
+          const det = document.createElement('details');
+          const sm  = document.createElement('summary');
+          sm.textContent = name;
+          sm.dataset.path = full; // folder path
+
+          // On click, let browser toggle first, then if opened → try auto README
+          sm.addEventListener('click', () => {
+            setTimeout(() => {
+              if (det.open) tryAutoLoadReadmeForPath(full);
+            }, 0);
+          });
+
+          // Also react to keyboard/other toggle sources
+          det.addEventListener('toggle', () => {
+            if (BULK_TOGGLE) return;
+            if (det.open) tryAutoLoadReadmeForPath(full);
+          });
+
+          det.appendChild(sm);
+          parent.appendChild(det);
+          addNodes(det, full, node);
+        }
+      }
+    }
+
+    addNodes(rootEl, basePath, subtree);
   }
 
+  // ------------------------------
+  // Active markers
+  // ------------------------------
+  function clearActive(){
+    tree.querySelectorAll('.file-active').forEach(el => el.classList.remove('file-active'));
+    tree.querySelectorAll('.folder-active').forEach(el => el.classList.remove('folder-active'));
+  }
+  function markActiveFile(pathRel){
+    clearActive();
+    const a = tree.querySelector(`a[data-path="${cssEscape(pathRel)}"]`);
+    if (a) a.classList.add('file-active');
+    // ensure all ancestor folders open
+    openAncestors(pathRel);
+  }
+  function markActiveFolder(pathRel){
+    clearActive();
+    const sm = tree.querySelector(`summary[data-path="${cssEscape(pathRel)}"]`);
+    if (sm) sm.classList.add('folder-active');
+    openAncestors(pathRel);
+  }
+  function openAncestors(pathRel){
+    const parts = pathRel.split('/').filter(Boolean);
+    let p = '';
+    for (const part of parts){
+      p = p ? p + '/' + part : part;
+      const sm = tree.querySelector(`summary[data-path="${cssEscape(p)}"]`);
+      if (sm){
+        const det = sm.parentElement;
+        if (det && det.tagName === 'DETAILS') det.open = true;
+      }
+    }
+    // scroll into view a bit later so layout has updated
+    setTimeout(()=>{
+      const target = tree.querySelector(`a[data-path="${cssEscape(pathRel)}"], summary[data-path="${cssEscape(pathRel)}"]`);
+      target?.scrollIntoView({block:'nearest'});
+    },0);
+  }
+  function cssEscape(s){
+    // Minimal CSS attribute value escaper for quotes/backslashes
+    return String(s).replace(/\\/g,'\\\\').replace(/"/g,'\\"');
+  }
+
+  // ------------------------------
   // Preview
-  function markActive(path){
-    document.querySelectorAll('.tree a').forEach(a=>a.classList.toggle('file-active', a.getAttribute('href')===path));
-    // Ordner aufklappen
-    let p = path.split('/'); p.pop();
-    const folder = p.join('/');
-    Array.from(document.querySelectorAll('.tree summary')).forEach(s=>{
-      if(s.dataset.path && folder.startsWith(s.dataset.path)) s.parentElement.open = true;
-    });
+  // ------------------------------
+  let CURRENT_FILE = '';
+  let CURRENT_DIR  = '';
+
+  function renderFolderFallback(dirPathRel, childrenObj){
+    title.textContent = dirPathRel || 'Ordner';
+    const names = Object.keys(childrenObj || {}).filter(n => !(childrenObj[n]?.__type === 'file' && isReadmeName(n)));
+    const list = names.length
+      ? '<ul style="margin:.25rem 0 .5rem 1rem;">' + names.map(n => `<li>${escapeHtml(n)}</li>`).join('') + '</ul>'
+      : '<p>(leer)</p>';
+    body.innerHTML =
+      '<div class="muted" style="line-height:1.4">' +
+        '<p>Kein README in diesem Ordner.</p>' +
+        '<p>Inhalt:</p>' + list +
+        '<p class="muted">Tipp: README.md/README.txt anlegen – wird beim Öffnen des Ordners automatisch angezeigt.</p>' +
+      '</div>';
+    dl.setAttribute('href', '#'); // no download for folder
   }
 
-  async function openPreview(pathVirt){
-    title.textContent = 'Lädt…'; body.textContent = 'Bitte warten…';
-    const e = ext(pathVirt);
-    const liveURL = urlFor(pathVirt);  // Kern: Engine → CDN, Repo → lokal
-    dl.setAttribute('href', liveURL);
+  function tryAutoLoadReadmeForPath(dirPathRel){
+    const subtree = getSubtreeByPath(TREE_ROOT, dirPathRel);
+    if (!subtree || typeof subtree !== 'object') return false;
 
-    try{
-      if(isImg(e)){
-        title.textContent = pathVirt;
-        body.innerHTML = `<img alt="Vorschau" style="max-width:100%;height:auto" src="${liveURL}">`;
-        markActive(pathVirt); return;
-      }
-      if(isPdf(e)){
-        title.textContent = pathVirt;
-        body.innerHTML = `<object data="${liveURL}" type="application/pdf" width="100%" height="600">PDF nicht einbettbar. <a href="${liveURL}" target="_blank" rel="noopener">Öffnen</a>.</object>`;
-        markActive(pathVirt); return;
-      }
-      if(isBin(e)){
-        title.textContent = pathVirt;
-        body.innerHTML = `<p>Nicht darstellbarer Dateityp. Bitte über „Download“ laden.</p>`;
-        markActive(pathVirt); return;
-      }
+    const readmeFullPath = findReadmePathForChildren(dirPathRel, subtree);
+    if (readmeFullPath){
+      markActiveFolder(dirPathRel);
+      setHashPath(readmeFullPath);
+      openPreview(readmeFullPath);
+      return true;
+    }
+    // Fallback: show folder info
+    markActiveFolder(dirPathRel);
+    renderFolderFallback(dirPathRel, subtree);
+    return false;
+  }
 
-      const resp = await fetch(liveURL, {cache:'no-cache'});
-      if(!resp.ok){ title.textContent='Fehler'; body.textContent='Datei nicht gefunden oder nicht lesbar.'; return; }
-      const text = await resp.text();
-      title.textContent = pathVirt;
-      const html = renderAnnotated(text, pathVirt, liveURL);
-      body.innerHTML = `<pre class="readme" style="${PRE_STYLE}"><code style="${CODE_STYLE}">${html}</code></pre>`;
-      markActive(pathVirt);
-    }catch(err){
-      title.textContent='Fehler';
-      body.textContent='Beim Laden ist ein Fehler aufgetreten.';
-      console.error(err);
+  async function openPreview(pathRel){
+    CURRENT_FILE = pathRel;
+    CURRENT_DIR  = dirname(pathRel);
+
+    const node = getNodeByPath(pathRel);
+    const fileUrl = (node && node.url) ? node.url : pathRel;
+    title.textContent = pathRel;
+    dl.setAttribute('href', fileUrl);
+    dl.setAttribute('download', basename(pathRel));
+
+    const e = ext(pathRel);
+
+    // Images
+    if (['png','jpg','jpeg','gif','webp','svg'].includes(e)){
+      body.innerHTML = `<img src="${escapeHtml(fileUrl)}" alt="${escapeHtml(pathRel)}" style="max-width:100%;height:auto;display:block;" />`;
+      markActiveFile(pathRel);
+      return;
+    }
+
+    // PDF
+    if (e === 'pdf'){
+      body.innerHTML = `<object data="${escapeHtml(fileUrl)}" type="application/pdf" style="width:100%;min-height:70vh;">
+        <p>PDF kann nicht eingebettet werden. <a href="${escapeHtml(fileUrl)}" target="_blank" rel="noopener">Hier öffnen</a>.</p>
+      </object>`;
+      markActiveFile(pathRel);
+      return;
+    }
+
+    // Likely binary not previewable
+    if (['zip','7z','rar','bin','exe','dll','wasm'].includes(e)){
+      body.innerHTML = `<div class="muted">Datei <code>${escapeHtml(basename(pathRel))}</code> kann nicht als Text angezeigt werden. Bitte über „Download“ öffnen.</div>`;
+      markActiveFile(pathRel);
+      return;
+    }
+
+    // Text-like
+    try {
+      const res = await fetch(fileUrl, {cache:'no-cache'});
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const txt = await res.text();
+      const linked = linkifySafe(txt, CURRENT_DIR);
+      body.innerHTML = `<pre style="${PRE_STYLE}"><code style="${CODE_STYLE}">${linked}</code></pre>`;
+      markActiveFile(pathRel);
+    } catch (err){
+      body.innerHTML = `<div class="muted">Konnte Datei nicht laden (${escapeHtml(String(err))}).</div>`;
+      markActiveFile(pathRel);
     }
   }
 
-  // Hash-Deep-Link
-  const getHashPath = () => { const m=(location.hash||'').match(/[#&]preview=([^&]+)/); return m?decodeURIComponent(m[1]):null; };
-  const setHashPath = (p) => {
-    const enc = encodeURIComponent(p);
-    if(location.hash.includes('preview=')) location.hash = location.hash.replace(/preview=[^&]*/, 'preview='+enc);
-    else location.hash = (location.hash ? location.hash + '&' : '#') + 'preview='+enc;
-  };
-
-  // Delegation (nur für linkify aus „renderAnnotated“, siehe oben)
-  document.addEventListener('click', (e)=>{
-    const a = e.target.closest('a[data-preview]');
-    if(!a) return;
-    e.preventDefault();
-    const token = a.getAttribute('data-preview');
-    const virt  = resolveTokenToVirtPath(token, getHashPath() || '');
-    if(virt){ setHashPath(virt); openPreview(virt); }
-  });
-
-  printBtn?.addEventListener('click', ()=>window.print());
-
+  // ------------------------------
   // Boot
+  // ------------------------------
   async function boot(){
-    try{
-      const r = await fetch(MANIFEST_URL+`?v=${Date.now()}`, {cache:'no-cache'});
-      if(!r.ok) throw new Error('manifest.json nicht gefunden');
-      MAN = await r.json();
-      TREE_ROOT = (MAN.tree && MAN.tree[ALLOWED]) ? MAN.tree[ALLOWED] : {};
-      indexSubtree(TREE_ROOT, ALLOWED);
-      buildTree(TREE_ROOT);
-      const p = getHashPath();
-      if(p) openPreview(p);
-    }catch(e){
+    try {
+      const res = await fetch(MANIFEST_URL, {cache:'no-cache'});
+      if (!res.ok) throw new Error('Manifest HTTP ' + res.status);
+      const manifest = await res.json();
+      MANIFEST = manifest;
+      TREE_ROOT = manifest.tree || {};
+
+      const subtree = getSubtreeByPath(TREE_ROOT, ALLOWED);
+      if (!subtree){
+        tree.textContent = 'ALLOWED_ROOT nicht im Manifest gefunden.';
+        return;
+      }
+
+      // Build tree rooted at allowed path
+      buildTree(tree, subtree, ALLOWED);
+
+      // Deep link
+      const initial = getHashPath();
+      if (initial){
+        openPreview(initial);
+      } else {
+        // try to auto-open README at root
+        tryAutoLoadReadmeForPath(ALLOWED);
+      }
+
+    } catch (e){
       tree.textContent = 'Manifest konnte nicht geladen werden.';
+      body.textContent = '';
       console.error(e);
     }
   }
+
+  // ------------------------------
+  // Global listeners
+  // ------------------------------
+  window.addEventListener('hashchange', () => {
+    const p = getHashPath();
+    if (p) openPreview(p);
+  });
+
+  // delegated click for internal preview links produced by linkifySafe()
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest('a[data-preview]');
+    if (!a) return;
+    e.preventDefault();
+    const p = a.getAttribute('data-preview');
+    if (p){ setHashPath(p); openPreview(p); }
+  });
+
+  // expand/collapse all with guard
+  expandBtn?.addEventListener('click', () => {
+    BULK_TOGGLE = true;
+    tree.querySelectorAll('details').forEach(d => d.open = true);
+    BULK_TOGGLE = false;
+  });
+  collapseBtn?.addEventListener('click', () => {
+    BULK_TOGGLE = true;
+    tree.querySelectorAll('details').forEach(d => d.open = false);
+    BULK_TOGGLE = false;
+  });
+
+  printBtn?.addEventListener('click', () => window.print());
+
+  // Start
   window.addEventListener('DOMContentLoaded', boot);
 })();
-
-
